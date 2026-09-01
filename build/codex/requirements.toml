@@ -1,0 +1,32 @@
+allow_managed_hooks_only = true
+allowed_approval_policies = ["untrusted", "on-request"]
+allowed_sandbox_modes = ["read-only", "workspace-write"]
+check_for_update_on_startup = false
+allowed_web_search_modes = []
+
+[mcp_servers]
+
+[permissions.filesystem]
+deny_read = ["~/.ssh", "~/.aws", "~/.config/gcloud", "~/.kube", "~/.docker/config.json", "~/.netrc", "~/.npmrc", "~/.config/gh"]
+
+[experimental_network]
+enabled = true
+managed_allowed_domains_only = true
+
+[experimental_network.domains]
+"github.com" = "allow"
+"api.github.com" = "allow"
+"codeload.github.com" = "allow"
+"registry.npmjs.org" = "allow"
+"pypi.org" = "allow"
+"files.pythonhosted.org" = "allow"
+"api.anthropic.com" = "allow"
+"api.openai.com" = "allow"
+
+[marketplaces]
+restrict_to_allowed_sources = true
+
+[marketplaces.allowed_sources]
+
+[features]
+in_app_updates = false

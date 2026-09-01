@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+"""Build every deliverable from baseline/rules.yaml and baseline/site.yaml (or site.example.yaml).
+
+    python3 tools/build.py [--site baseline/site.yaml]
+
+Writes to build/:
+  claude/managed-settings.json            macOS, Linux
+  claude/managed-settings.windows.json    Windows (adds Windows-only rules)
+  codex/requirements.toml
+  macos/coding-agent-baseline.mobileconfig   both preference domains; Jamf or Intune (macOS custom profile)
+  jamf/com.anthropic.claudecode.plist        Jamf "Application & Custom Settings", one per domain
+  jamf/com.openai.codex.plist
+  intune/windows/Install-CodingAgentBaseline.ps1   Intune platform script
+  MANIFEST.md                              which rule produced which key
+Output is deterministic: the same input gives byte-identical files.
+"""
+import argparse
+import base64
+import copy
+import json
+import plistlib
+import uuid
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "build"  # overridden by --out
+NS = uuid.UUID("6f1d2c4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f")  # fixed namespace -> stable payload UUIDs
+
+
+def set_dotted(tree, dotted, value):
+    keys = dotted.split(".")
+    for k in keys[:-1]:
+        tree = tree.setdefault(k, {})
+    last = keys[-1]
+    if isinstance(tree.get(last), list) and isinstance(value, list):
+        tree[last] = tree[last] + [v for v in value if v not in tree[last]]
+    else:
+        tree[last] = copy.deepcopy(value)
+
+
+def get_dotted(tree, dotted):
+    for k in dotted.split("."):
+        if not isinstance(tree, dict) or k not in tree:
+            return None
+        tree = tree[k]
+    return tree
+
+
+def compose(rules, site, platform):
+    claude, codex, manifest = {}, {}, []
+    for rule in rules:
+        if platform not in rule.get("platforms", ["macos", "linux", "windows"]):
+            continue
+        for agent, tree in (("claude", claude), ("codex", codex)):
+            for key, value in (rule.get(agent) or {}).items():
+                set_dotted(tree, key, value)
+                manifest.append((rule["id"], agent, key))
+        for target, site_path in (rule.get("site") or {}).items():
+            value = get_dotted(site, site_path)
+            if value is None:
+                continue
+            agent, key = target.split(".", 1)
+            set_dotted(claude if agent == "claude" else codex, key, value)
+            manifest.append((rule["id"], agent, key + " (site)"))
+    return claude, codex, manifest
+
+
+# --- TOML: the subset requirements.toml needs (strings, booleans, numbers, arrays, nested tables) ---
+def toml_value(v):
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return str(v)
+    if isinstance(v, str):
+        return json.dumps(v, ensure_ascii=False)
+    if isinstance(v, list):
+        return "[" + ", ".join(toml_value(x) for x in v) + "]"
+    raise TypeError(f"unsupported TOML value {v!r}")
+
+
+def toml_key(k):
+    return k if k.replace("_", "").replace("-", "").isalnum() else json.dumps(k)
+
+
+def to_toml(tree, prefix=()):
+    scalars = {k: v for k, v in tree.items() if not isinstance(v, dict)}
+    tables = {k: v for k, v in tree.items() if isinstance(v, dict)}
+    lines = []
+    if prefix and (scalars or not tables):
+        lines.append("[" + ".".join(toml_key(p) for p in prefix) + "]")
+    lines += [f"{toml_key(k)} = {toml_value(v)}" for k, v in scalars.items()]
+    for k, v in tables.items():
+        if lines:
+            lines.append("")
+        lines.append(to_toml(v, prefix + (k,)).rstrip("\n"))
+    return "\n".join(lines) + "\n"
+
+
+# --- macOS profile -------------------------------------------------------------------------------
+def payload(domain, settings):
+    pid = str(uuid.uuid5(NS, domain)).upper()
+    return {"PayloadDisplayName": domain, "PayloadIdentifier": f"org.baseline.coding-agents.{pid}",
+            "PayloadType": "com.apple.ManagedClient.preferences", "PayloadUUID": pid, "PayloadVersion": 1,
+            "PayloadContent": {domain: {"Forced": [{"mcx_preference_settings": settings}]}}}
+
+
+def mobileconfig(claude, codex_b64):
+    return {"PayloadDisplayName": "Coding agent baseline (Claude Code, Codex)",
+            "PayloadDescription": "Managed policy for Claude Code and OpenAI Codex, built from baseline/rules.yaml.",
+            "PayloadIdentifier": "org.baseline.coding-agents", "PayloadScope": "System",
+            "PayloadType": "Configuration", "PayloadUUID": str(uuid.uuid5(NS, "profile")).upper(),
+            "PayloadVersion": 1, "PayloadRemovalDisallowed": True,
+            "PayloadContent": [payload("com.anthropic.claudecode", claude),
+                               payload("com.openai.codex", {"requirements_toml_base64": codex_b64})]}
+
+
+# --- Windows -------------------------------------------------------------------------------------
+PS1 = r"""<#
+Coding agent baseline for Windows: Claude Code managed settings and Codex requirements.
+Generated by tools/build.py from baseline/rules.yaml. Do not edit by hand.
+
+Intune: Devices > Scripts and remediations > Platform scripts > Add (Windows 10 and later).
+  Run this script using the logged on credentials: No      (runs as SYSTEM)
+  Run script in 64 bit PowerShell Host: Yes
+
+Both directories are reset to administrator-only write access before the files are written:
+a directory a standard user created in advance would otherwise let that user replace the policy
+(GHSA-5cwg-9f6j-9jvx is this class of issue for Claude Code; rule R15).
+#>
+$ErrorActionPreference = 'Stop'
+
+function Write-AdminOnlyFile([string]$Dir, [string]$Name, [string]$Content) {
+    New-Item -ItemType Directory -Path $Dir -Force | Out-Null
+    # Owner Administrators; SYSTEM and Administrators full control; Users read; no inheritance.
+    & icacls.exe $Dir /setowner '*S-1-5-32-544' /T /C | Out-Null
+    & icacls.exe $Dir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /T /C | Out-Null
+    $path = Join-Path $Dir $Name
+    [System.IO.File]::WriteAllText($path, $Content, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Output "Wrote $path"
+}
+
+$claude = @'
+__CLAUDE__
+'@
+
+$codex = @'
+__CODEX__
+'@
+
+Write-AdminOnlyFile (Join-Path $env:ProgramFiles 'ClaudeCode') 'managed-settings.json' $claude
+Write-AdminOnlyFile (Join-Path $env:ProgramData 'OpenAI\Codex') 'requirements.toml' $codex
+"""
+
+
+def write(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data if isinstance(data, bytes) else data.encode("utf-8"))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    default_site = ROOT / "baseline/site.yaml"
+    ap.add_argument("--site", default=str(default_site if default_site.exists() else ROOT / "baseline/site.example.yaml"))
+    ap.add_argument("--out", default=str(ROOT / "build"))
+    args = ap.parse_args()
+    global OUT
+    OUT = Path(args.out).resolve()
+    rules = yaml.safe_load((ROOT / "baseline/rules.yaml").read_text())["rules"]
+    site = yaml.safe_load(Path(args.site).read_text()) or {}
+
+    claude, codex, manifest = compose(rules, site, "macos")
+    claude_win, codex_win, manifest_win = compose(rules, site, "windows")
+    claude_json = json.dumps(claude, indent=2) + "\n"
+    claude_win_json = json.dumps(claude_win, indent=2) + "\n"
+    codex_toml = to_toml(codex)
+    codex_win_toml = to_toml(codex_win)
+    codex_b64 = base64.b64encode(codex_toml.encode()).decode()
+
+    write(OUT / "claude/managed-settings.json", claude_json)
+    write(OUT / "claude/managed-settings.windows.json", claude_win_json)
+    write(OUT / "codex/requirements.toml", codex_toml)
+    write(OUT / "macos/coding-agent-baseline.mobileconfig", plistlib.dumps(mobileconfig(claude, codex_b64), sort_keys=False))
+    write(OUT / "jamf/com.anthropic.claudecode.plist", plistlib.dumps(claude, sort_keys=False))
+    write(OUT / "jamf/com.openai.codex.plist", plistlib.dumps({"requirements_toml_base64": codex_b64}))
+    write(OUT / "intune/windows/Install-CodingAgentBaseline.ps1",
+          PS1.replace("__CLAUDE__", claude_win_json.rstrip("\n")).replace("__CODEX__", codex_win_toml.rstrip("\n")))
+
+    rows = ["# Build manifest", "", f"Site file: `{Path(args.site).resolve().relative_to(ROOT)}`.", "",
+            "| Rule | Agent | Key | Platforms |", "|---|---|---|---|"]
+    seen = {}
+    for rid, agent, key in manifest_win:
+        seen.setdefault((rid, agent, key), "windows")
+    for rid, agent, key in manifest:
+        seen[(rid, agent, key)] = "all"
+    rows += [f"| {r} | {a} | `{k}` | {p} |" for (r, a, k), p in seen.items()]
+    no_codex = [r["id"] for r in rules if not r.get("codex") and "codex" in (r.get("gap") or {})]
+    no_claude = [r["id"] for r in rules if not r.get("claude") and "claude" in (r.get("gap") or {})]
+    rows += ["", f"Rules with no Codex control (see `gap` in rules.yaml): {', '.join(no_codex) or 'none'}.",
+             f"Rules with no Claude Code control: {', '.join(no_claude) or 'none'}."]
+    write(OUT / "MANIFEST.md", "\n".join(rows) + "\n")
+    print(f"{len(rules)} rules -> {len(claude)} Claude top-level keys, {len(codex)} Codex top-level keys; build/ written")
+
+
+if __name__ == "__main__":
+    main()
