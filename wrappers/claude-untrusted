@@ -1,0 +1,5 @@
+#!/bin/sh
+# R17: start Claude Code non-interactively in a repository nobody reviewed (CI, background agents).
+# --setting-sources user: the project's settings files and .mcp.json are not read, so its hooks, env block
+# and helper commands do not run. Managed settings still apply.
+exec claude --setting-sources user "$@"
