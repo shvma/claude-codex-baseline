@@ -1,0 +1,3 @@
+# Site values for the release gate: the same baseline, with the API endpoint pinned to the local stub.
+api:
+  claude_base_url: http://127.0.0.1:8099

@@ -1,0 +1,4 @@
+# Negative control for the gate: the baseline as it stood before rule R16 (API endpoint not pinned).
+# The gate must deny every version with this policy; results/gate-negative/ records that it does.
+api:
+  claude_base_url: null
