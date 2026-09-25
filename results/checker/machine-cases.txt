@@ -1,0 +1,31 @@
+### baseline installed by root
+         holds  claude.policy_delivered          R15  selected source: file
+         holds  claude.policy_matches_baseline        every baseline key present
+         holds  claude.policy_file_owner         R15  file and parents owned by root, not group/other-writable
+         holds  codex.policy_delivered           R15  selected source: file
+         holds  codex.policy_matches_baseline         identical to build/codex/requirements.toml
+         holds  codex.policy_file_owner          R15  file and parents owned by root, not group/other-writable
+### Claude policy file writable by the user's group
+         holds  claude.policy_delivered          R15  selected source: file
+         holds  claude.policy_matches_baseline        every baseline key present
+ does_not_hold  claude.policy_file_owner         R15  replaceable through /etc/claude-code/managed-settings.json
+         holds  codex.policy_delivered           R15  selected source: file
+         holds  codex.policy_matches_baseline         identical to build/codex/requirements.toml
+         holds  codex.policy_file_owner          R15  file and parents owned by root, not group/other-writable
+### Codex policy directory owned by the user
+         holds  claude.policy_delivered          R15  selected source: file
+         holds  claude.policy_matches_baseline        every baseline key present
+         holds  claude.policy_file_owner         R15  file and parents owned by root, not group/other-writable
+         holds  codex.policy_delivered           R15  selected source: file
+         holds  codex.policy_matches_baseline         identical to build/codex/requirements.toml
+ does_not_hold  codex.policy_file_owner          R15  replaceable through /etc/codex
+### Claude policy edited: hook lock removed, sandbox off
+         holds  claude.policy_delivered          R15  selected source: file
+ does_not_hold  claude.policy_matches_baseline        missing or different: allowManagedHooksOnly, sandbox.enabled
+         holds  claude.policy_file_owner         R15  file and parents owned by root, not group/other-writable
+         holds  codex.policy_delivered           R15  selected source: file
+         holds  codex.policy_matches_baseline         identical to build/codex/requirements.toml
+         holds  codex.policy_file_owner          R15  file and parents owned by root, not group/other-writable
+### no policy delivered
+ does_not_hold  claude.policy_delivered          R15  no managed source found (plist, HKLM or managed-settings.json)
+ does_not_hold  codex.policy_delivered           R15  no requirements.toml or MDM requirements found
