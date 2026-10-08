@@ -1,0 +1,33 @@
+{
+ "rules": 17,
+ "rules_with_verified_sources": 17,
+ "claude_keys": 25,
+ "codex_keys": 15,
+ "codex_built_in": [
+  "R08",
+  "R16"
+ ],
+ "codex_no_control": [
+  "R06",
+  "R10",
+  "R14"
+ ],
+ "checker_findings": 15,
+ "checker_neutralised": 12,
+ "versions_tested": {
+  "claude": 27,
+  "codex": 18
+ },
+ "versions_admitted": {
+  "claude": 27,
+  "codex": 18
+ },
+ "regressions": {
+  "claude": 0,
+  "codex": 0
+ },
+ "negative_control": {
+  "versions_tested": 2,
+  "denied": 2
+ }
+}

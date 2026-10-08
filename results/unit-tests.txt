@@ -1,0 +1,10 @@
+test_clean_repository_has_no_findings (test_check_repo.RepoModeTest) ... ok
+test_coverage_is_honest (test_check_repo.RepoModeTest) ... ok
+test_every_plant_is_reported (test_check_repo.RepoModeTest) ... ok
+test_untracked_local_settings_ignored (test_check_repo.RepoModeTest) ... ok
+test_extra_keys_allowed_missing_reported (test_check_repo.SubsetTest) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.134s
+
+OK
