@@ -19,8 +19,8 @@
   "codex": 18
  },
  "versions_admitted": {
-  "claude": 27,
-  "codex": 18
+  "claude": 26,
+  "codex": 16
  },
  "regressions": {
   "claude": 0,

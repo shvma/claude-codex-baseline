@@ -7,7 +7,15 @@
     "2.1.150",
     "2.1.312"
    ],
-   "regressions": []
+   "regressions": [],
+   "denial_reasons": {
+    "2.1.150": [
+     "repo_env_base_url:does_not_hold"
+    ],
+    "2.1.312": [
+     "repo_env_base_url:does_not_hold"
+    ]
+   }
   }
  },
  "versions_tested": 2,

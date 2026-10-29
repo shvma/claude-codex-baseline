@@ -1,10 +1,19 @@
+test_missing_different_and_extra_reported (test_check_repo.PolicyMismatchTest) ... ok
+test_weakening_additions_fail_on_real_baseline (test_check_repo.PolicyMismatchTest) ... ok
 test_clean_repository_has_no_findings (test_check_repo.RepoModeTest) ... ok
 test_coverage_is_honest (test_check_repo.RepoModeTest) ... ok
 test_every_plant_is_reported (test_check_repo.RepoModeTest) ... ok
+test_inline_mcp_table_reported (test_check_repo.RepoModeTest) ... ok
 test_untracked_local_settings_ignored (test_check_repo.RepoModeTest) ... ok
-test_extra_keys_allowed_missing_reported (test_check_repo.SubsetTest) ... ok
+test_claimed_hold_needs_observations (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_complete_valid_evidence (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_crash_or_timeout_after_api_contact_cannot_admit (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_empty_and_malformed_files_deny (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_install_and_container_failure_deny (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_invalid_control_cannot_admit (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_missing_duplicate_metadata_and_unknown_outcome_deny (test_gate_decisions.AdmissionEvidenceTest) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.134s
+Ran 14 tests in 0.151s
 
 OK

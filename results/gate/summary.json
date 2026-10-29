@@ -3,7 +3,6 @@
   "claude": {
    "versions_tested": 27,
    "admitted": [
-    "2.1.150",
     "2.1.193",
     "2.1.242",
     "2.1.257",
@@ -31,14 +30,19 @@
     "2.1.311",
     "2.1.312"
    ],
-   "denied": [],
-   "regressions": []
+   "denied": [
+    "2.1.150"
+   ],
+   "regressions": [],
+   "denial_reasons": {
+    "2.1.150": [
+     "sideload_mcp_flag:did_not_run"
+    ]
+   }
   },
   "codex": {
    "versions_tested": 18,
    "admitted": [
-    "0.137.0",
-    "0.138.0",
     "0.156.1",
     "0.157.0",
     "0.157.1",
@@ -56,8 +60,19 @@
     "0.164.0",
     "0.165.0"
    ],
-   "denied": [],
-   "regressions": []
+   "denied": [
+    "0.137.0",
+    "0.138.0"
+   ],
+   "regressions": [],
+   "denial_reasons": {
+    "0.137.0": [
+     "repo_hook:invalid_control"
+    ],
+    "0.138.0": [
+     "repo_hook:invalid_control"
+    ]
+   }
   }
  },
  "versions_tested": 45,

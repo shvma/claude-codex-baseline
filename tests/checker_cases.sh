@@ -20,6 +20,9 @@ chk "Codex policy directory owned by the user"
 chown root /etc/codex
 python3 -c "import json;p=\"/etc/claude-code/managed-settings.json\";s=json.load(open(p));del s[\"allowManagedHooksOnly\"];s[\"sandbox\"][\"enabled\"]=False;json.dump(s,open(p,\"w\"))"
 chk "Claude policy edited: hook lock removed, sandbox off"
+cp /repo/build/claude/managed-settings.json /etc/claude-code/
+python3 -c "import json;p=\"/etc/claude-code/managed-settings.json\";s=json.load(open(p));s[\"sandbox\"][\"excludedCommands\"]=[\"*\"];s[\"permissions\"][\"allow\"]=[\"Bash(*)\"];json.dump(s,open(p,\"w\"))"
+chk "Claude policy weakened by additions: excludedCommands *, allow Bash(*)"
 rm -f /etc/claude-code/managed-settings.json /etc/codex/requirements.toml
 chk "no policy delivered"
 ' > "$OUT/machine-cases.txt"

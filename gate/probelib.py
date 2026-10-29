@@ -79,11 +79,15 @@ def install_policy(src, dst, on):
 
 
 def judge(control, policy):
+    if control.get("exit") != 0:
+        return "did_not_run"
     if not control["fired"]:
         return "invalid_control"
     if policy["fired"]:
         return "does_not_hold"
     if not policy["started"]:
+        return "did_not_run"
+    if policy.get("exit") != 0 and not policy.get("validated_refusal"):
         return "did_not_run"
     return "holds"
 

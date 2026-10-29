@@ -14,11 +14,46 @@ $ErrorActionPreference = 'Stop'
 
 function Write-AdminOnlyFile([string]$Dir, [string]$Name, [string]$Content) {
     New-Item -ItemType Directory -Path $Dir -Force | Out-Null
-    # Owner Administrators; SYSTEM and Administrators full control; Users read; no inheritance.
-    & icacls.exe $Dir /setowner '*S-1-5-32-544' /T /C | Out-Null
-    & icacls.exe $Dir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /T /C | Out-Null
+    # Refuse reparse points and replaceable parents; never follow an attacker-owned link.
+    $parent = (Get-Item -LiteralPath $Dir).Parent
+    while ($null -ne $parent) {
+        if ($parent.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse parent: $parent" }
+        $parentAcl = Get-Acl -LiteralPath $parent.FullName
+        $owner = $parentAcl.GetOwner([Security.Principal.SecurityIdentifier]).Value
+        if ($owner -notin @('S-1-5-18', 'S-1-5-32-544') -and -not $owner.StartsWith('S-1-5-80-')) {
+            throw "Untrusted parent owner: $parent"
+        }
+        foreach ($ace in $parentAcl.Access) {
+            $sid = $ace.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
+            $dangerous = [Security.AccessControl.FileSystemRights]'DeleteSubdirectoriesAndFiles,ChangePermissions,TakeOwnership'
+            if ($ace.AccessControlType -eq 'Allow' -and ($ace.FileSystemRights -band $dangerous) -and
+                $sid -notin @('S-1-5-18', 'S-1-5-32-544') -and -not $sid.StartsWith('S-1-5-80-')) {
+                throw "Replaceable parent: $parent"
+            }
+        }
+        $parent = $parent.Parent
+    }
+    # Fresh DACL, not /grant:r: remove pre-existing explicit grants too.
+    function Protect-Item([string]$ItemPath, [bool]$Directory) {
+        $item = Get-Item -LiteralPath $ItemPath -Force
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse point: $ItemPath" }
+        $type = if ($Directory) { 'System.Security.AccessControl.DirectorySecurity' } else { 'System.Security.AccessControl.FileSecurity' }
+        $acl = New-Object $type
+        $acl.SetAccessRuleProtection($true, $false)
+        $acl.SetOwner((New-Object Security.Principal.SecurityIdentifier('S-1-5-32-544')))
+        foreach ($entry in @(@('S-1-5-18', 'FullControl'), @('S-1-5-32-544', 'FullControl'), @('S-1-5-32-545', 'ReadAndExecute'))) {
+            $sid = New-Object Security.Principal.SecurityIdentifier($entry[0])
+            $inheritance = if ($Directory) { 'ContainerInherit,ObjectInherit' } else { 'None' }
+            $rule = New-Object Security.AccessControl.FileSystemAccessRule($sid, $entry[1], $inheritance, 'None', 'Allow')
+            $acl.AddAccessRule($rule)
+        }
+        Set-Acl -LiteralPath $ItemPath -AclObject $acl
+    }
+    Protect-Item $Dir $true
     $path = Join-Path $Dir $Name
+    if (Test-Path -LiteralPath $path) { Protect-Item $path $false }
     [System.IO.File]::WriteAllText($path, $Content, (New-Object System.Text.UTF8Encoding($false)))
+    Protect-Item $path $false
     Write-Output "Wrote $path"
 }
 

@@ -20,6 +20,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 ROOT = Path(__file__).resolve().parent.parent
 EXPECTED_CLAUDE = ROOT / "build/claude/managed-settings.json"
 EXPECTED_CODEX = ROOT / "build/codex/requirements.toml"
@@ -85,9 +90,30 @@ def load_claude_delivered(kind, files):
                 return "HKLM", json.loads(winreg.QueryValueEx(k, "Settings")[0])
         except OSError:
             pass
-    if files["claude_file"].exists():
-        return "file", json.loads(files["claude_file"].read_text())
+    if files["claude_file"].exists() or any(files["claude_dropins"].glob("*.json")):
+        settings = json.loads(files["claude_file"].read_text()) if files["claude_file"].exists() else {}
+        if not isinstance(settings, dict):
+            raise ValueError("managed settings must be an object")
+        for path in sorted(files["claude_dropins"].glob("*.json")):
+            overlay = json.loads(path.read_text())
+            settings = merge_settings(settings, overlay)
+        return "file", settings
     return None, None
+
+
+def merge_settings(base, overlay):
+    if not isinstance(overlay, dict):
+        raise ValueError("managed drop-in must be an object")
+    merged = dict(base)
+    for key, value in overlay.items():
+        old = merged.get(key)
+        if isinstance(old, dict) and isinstance(value, dict):
+            merged[key] = merge_settings(old, value)
+        elif isinstance(old, list) and isinstance(value, list):
+            merged[key] = old + [item for item in value if item not in old]
+        else:
+            merged[key] = value
+    return merged
 
 
 def load_codex_delivered(kind, files):
@@ -101,17 +127,21 @@ def load_codex_delivered(kind, files):
     return None, None
 
 
-def subset_mismatch(expected, actual, path=""):
-    """Keys of `expected` that are missing from `actual` or differ. Extra keys in actual are allowed."""
+def policy_mismatch(expected, actual, path=""):
+    """Paths where the delivered policy differs from the baseline: missing, different, or extra.
+    Extra keys and extra list items count too: `excludedCommands: ["*"]` or `allow: ["Bash(*)"]` weaken the policy.
+    List order is ignored."""
     out = []
     if isinstance(expected, dict):
         if not isinstance(actual, dict):
             return [path or "(root)"]
         for k, v in expected.items():
-            out += subset_mismatch(v, actual.get(k, None) if k in actual else _MISSING, f"{path}.{k}" if path else k)
+            out += policy_mismatch(v, actual.get(k, None) if k in actual else _MISSING, f"{path}.{k}" if path else k)
+        out += [f"{path}.{k}" if path else k for k in actual if k not in expected]
         return out
     if isinstance(expected, list) and isinstance(actual, list):
-        return [] if all(x in actual for x in expected) else [path]
+        canon = lambda items: sorted(json.dumps(x, sort_keys=True) for x in items)
+        return [] if canon(expected) == canon(actual) else [path]
     return [] if expected == actual else [path]
 
 
@@ -149,15 +179,25 @@ def check_machine():
     if source is None:
         out.append(result("claude.policy_delivered", FAILS, "no managed source found (plist, HKLM or managed-settings.json)", "R15"))
     else:
-        out.append(result("claude.policy_delivered", HOLDS, f"selected source: {source}", "R15"))
+        out.append(result("claude.policy_delivered", HOLDS, f"local delivered source: {source}; remote effective policy is not inspected", "R15"))
         if EXPECTED_CLAUDE.exists():
-            diff = subset_mismatch(json.loads(EXPECTED_CLAUDE.read_text()), settings)
+            diff = policy_mismatch(json.loads(EXPECTED_CLAUDE.read_text()), settings)
             out.append(result("claude.policy_matches_baseline", FAILS if diff else HOLDS,
-                              ("missing or different: " + ", ".join(diff)) if diff else "every baseline key present"))
+                              ("missing, different or extra: " + ", ".join(diff)) if diff else "identical to build/claude/managed-settings.json"))
+        else:
+            out.append(result("claude.policy_matches_baseline", NOT_RUN, "build baseline is missing"))
         if source == "file" and kind != "windows":
             w = writable_by_non_root(files["claude_file"])
             out.append(result("claude.policy_file_owner", FAILS if w else HOLDS,
                               f"replaceable through {w}" if w else "file and parents owned by root, not group/other-writable", "R15"))
+            for dropin in sorted(files["claude_dropins"].glob("*.json")):
+                w = writable_by_non_root(dropin)
+                out.append(result("claude.dropin_owner", FAILS if w else HOLDS,
+                                  str(dropin) + (f" replaceable through {w}" if w else " admin-owned"), "R15"))
+            if files["claude_dropins"].exists():
+                w = writable_by_non_root(files["claude_dropins"])
+                out.append(result("claude.dropin_directory_owner", FAILS if w else HOLDS,
+                                  str(files["claude_dropins"]) + (f" replaceable through {w}" if w else " admin-owned"), "R15"))
     if kind == "windows":
         try:
             import winreg
@@ -194,6 +234,8 @@ def check_machine():
             same = norm_toml(text) == norm_toml(EXPECTED_CODEX.read_text())
             out.append(result("codex.policy_matches_baseline", HOLDS if same else FAILS,
                               "identical to build/codex/requirements.toml" if same else "differs from build/codex/requirements.toml"))
+        else:
+            out.append(result("codex.policy_matches_baseline", NOT_RUN, "build baseline is missing"))
         if source == "file" and kind != "windows":
             w = writable_by_non_root(files["codex_file"])
             out.append(result("codex.policy_file_owner", FAILS if w else HOLDS,
@@ -239,6 +281,8 @@ def scan_claude_settings(repo, rel):
     out = []
     try:
         s = json.loads((repo / rel).read_text())
+        if not isinstance(s, dict):
+            raise ValueError("settings must be an object")
     except (OSError, ValueError):
         return [finding("repo.claude_settings_unreadable", rel, "not valid JSON", None, False)]
     if s.get("hooks"):
@@ -263,6 +307,8 @@ def scan_claude_settings(repo, rel):
 
 def check_repo(repo):
     repo = Path(repo).resolve()
+    if not repo.is_dir():
+        return [finding("repo.missing", str(repo), "repository directory is missing", None, False)]
     out = []
     for rel in (".claude/settings.json", ".claude/settings.local.json"):
         if (repo / rel).exists():
@@ -280,11 +326,18 @@ def check_repo(repo):
     codex_cfg = repo / ".codex/config.toml"
     if codex_cfg.exists():
         text = codex_cfg.read_text()
-        for m in re.finditer(r"^\[mcp_servers\.([^\]]+)\]", text, re.M):
-            out.append(finding("repo.mcp", ".codex/config.toml", f"server {m.group(1)}", "R02", True))
-        if re.search(r"^\[\[?hooks", text, re.M):
+        try:
+            config = tomllib.loads(text)
+            if not isinstance(config.get("mcp_servers", {}), dict):
+                raise ValueError("mcp_servers must be a table")
+        except (ValueError, TypeError):
+            config = {}
+            out.append(finding("repo.codex_config_invalid", ".codex/config.toml", "invalid TOML", None, False))
+        for name in config.get("mcp_servers", {}):
+            out.append(finding("repo.mcp", ".codex/config.toml", f"server {name}", "R02", True))
+        if config.get("hooks"):
             out.append(finding("repo.hooks", ".codex/config.toml", "inline hooks", "R01", True))
-        if re.search(r"^\s*notify\s*=", text, re.M):
+        if "notify" in config:
             out.append(finding("repo.helper_command", ".codex/config.toml", "notify runs a command (ignored by Codex in project config)", None, True))
     if (repo / ".codex/hooks.json").exists():
         out.append(finding("repo.hooks", ".codex/hooks.json", "hook definitions", "R01", True))
@@ -331,7 +384,8 @@ def main():
                 extra = " [neutralised by the baseline]" if r["neutralised_by_baseline"] else " [NOT covered by the baseline]"
             print(f"{r['outcome']:>14}  {r['check']:<32} {r['rule'] or '':<4} {r['evidence']}{extra}")
     bad = [r for r in rows if r["outcome"] == FAILS and not r.get("neutralised_by_baseline", False)]
-    sys.exit(1 if bad else 0)
+    incomplete = any(r["outcome"] == NOT_RUN for r in rows)
+    sys.exit(1 if bad else 2 if incomplete else 0)
 
 
 if __name__ == "__main__":

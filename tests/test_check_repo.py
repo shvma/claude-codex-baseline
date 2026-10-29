@@ -1,4 +1,5 @@
 """Repository mode of the checker against a repository with every planted file it knows about."""
+import copy
 import json
 import subprocess
 import sys
@@ -65,12 +66,27 @@ class RepoModeTest(unittest.TestCase):
         sources = {r["evidence"].split(":")[0] for r in check.check_repo(self.repo)}
         self.assertIn(".claude/settings.local.json", sources)
 
+    def test_inline_mcp_table_reported(self):
+        (self.repo / '.codex/config.toml').write_text('mcp_servers = {evil = {command="sh"}}\n')
+        self.assertTrue(any(r['check'] == 'repo.mcp' and 'evil' in r['evidence'] for r in check.check_repo(self.repo)))
 
-class SubsetTest(unittest.TestCase):
-    def test_extra_keys_allowed_missing_reported(self):
+
+class PolicyMismatchTest(unittest.TestCase):
+    def test_missing_different_and_extra_reported(self):
         exp = {"a": True, "s": {"x": 1, "l": [1, 2]}}
-        self.assertEqual(check.subset_mismatch(exp, {"a": True, "s": {"x": 1, "l": [2, 1, 3]}, "z": 0}), [])
-        self.assertEqual(check.subset_mismatch(exp, {"a": False, "s": {"l": [1]}}), ["a", "s.x", "s.l"])
+        self.assertEqual(check.policy_mismatch(exp, {"a": True, "s": {"x": 1, "l": [2, 1]}}), [])
+        self.assertEqual(check.policy_mismatch(exp, {"a": True, "s": {"x": 1, "l": [1, 2]}, "z": 0}), ["z"])
+        self.assertEqual(check.policy_mismatch({'allowedMcpServers': []}, {'allowedMcpServers': ['evil']}), ['allowedMcpServers'])
+        self.assertEqual(check.policy_mismatch(exp, {"a": False, "s": {"l": [1]}}), ["a", "s.x", "s.l"])
+
+    def test_weakening_additions_fail_on_real_baseline(self):
+        base = json.loads((ROOT / "build/claude/managed-settings.json").read_text())
+        for mutate, path in [(lambda s: s["sandbox"].__setitem__("excludedCommands", ["*"]), "sandbox.excludedCommands"),
+                             (lambda s: s["permissions"].__setitem__("allow", ["Bash(*)"]), "permissions.allow"),
+                             (lambda s: s["sandbox"]["network"]["allowedDomains"].append("*"), "sandbox.network.allowedDomains")]:
+            settings = copy.deepcopy(base)
+            mutate(settings)
+            self.assertEqual(check.policy_mismatch(base, settings), [path])
 
 
 if __name__ == "__main__":
