@@ -1,0 +1,29 @@
+# Organisation-specific values. Copy to site.yaml and edit; build.py reads site.yaml if present,
+# otherwise this file. Empty lists and tables mean "nothing allowed"; null means "not set".
+
+mcp_allowlist:
+  claude: []        # e.g. [{serverName: github}]
+  codex: {}         # e.g. {github: {identity: {command: "github-mcp-server"}}}
+
+# Strict mode: no network for agent commands. Everything else as in site.example.yaml.
+egress:
+  allow: []
+  codex_domains: {}
+
+marketplaces:
+  claude: []        # e.g. [{source: github, repo: example-org/approved-plugins}]
+  codex: {}         # e.g. {company: {source: git, url: "https://git.example.org/plugins.git"}}
+
+api:
+  claude_base_url: https://api.anthropic.com   # or the company's LLM gateway
+
+versions:
+  claude:
+    min: null       # e.g. "2.1.300" — set from the release gate's admitted range
+    max: null
+
+login:
+  claude_method: null      # "claudeai" | "console" | "gateway"
+  claude_org_uuid: null
+  codex_methods: null      # e.g. [chatgpt]
+  codex_workspaces: null   # e.g. ["<workspace id>"]

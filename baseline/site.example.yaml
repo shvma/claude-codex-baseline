@@ -1,0 +1,32 @@
+# Organisation-specific values. Copy to site.yaml and edit; build.py reads site.yaml if present,
+# otherwise this file. Empty lists and tables mean "nothing allowed"; null means "not set".
+
+mcp_allowlist:
+  claude: []        # e.g. [{serverName: github}]
+  codex: {}         # e.g. {github: {identity: {command: "github-mcp-server"}}}
+
+# Starter allowlist: git hosting, package registries, the agents' APIs. Replace github.com with your own
+# git host where you can — a broad domain is also a way out. baseline/site.strict.yaml closes everything.
+egress:
+  allow: [github.com, api.github.com, codeload.github.com, registry.npmjs.org, pypi.org, files.pythonhosted.org,
+          api.anthropic.com, api.openai.com]
+  codex_domains: {github.com: allow, api.github.com: allow, codeload.github.com: allow, registry.npmjs.org: allow,
+                  pypi.org: allow, files.pythonhosted.org: allow, api.anthropic.com: allow, api.openai.com: allow}
+
+marketplaces:
+  claude: []        # e.g. [{source: github, repo: example-org/approved-plugins}]
+  codex: {}         # e.g. {company: {source: git, url: "https://git.example.org/plugins.git"}}
+
+api:
+  claude_base_url: https://api.anthropic.com   # or the company's LLM gateway
+
+versions:
+  claude:
+    min: null       # e.g. "2.1.300" — set from the release gate's admitted range
+    max: null
+
+login:
+  claude_method: null      # "claudeai" | "console" | "gateway"
+  claude_org_uuid: null
+  codex_methods: null      # e.g. [chatgpt]
+  codex_workspaces: null   # e.g. ["<workspace id>"]

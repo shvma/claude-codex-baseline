@@ -1,0 +1,271 @@
+{
+ "checked": "2026-10-28",
+ "quotes": [
+  {
+   "rule": "R01",
+   "url": "https://code.claude.com/docs/en/permissions",
+   "found": true,
+   "fetched": true,
+   "quote": "Hooks in settings files, the `env` block and helper commands such as `apiKeyHelper`, and a project skill's hooks and `allowed-tools` | Used | Used."
+  },
+  {
+   "rule": "R01",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Restrict hook execution to hooks your organization deploys."
+  },
+  {
+   "rule": "R01",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "To skip user, project, session, and plugin hooks while still allowing managed hooks, set `allow_managed_hooks_only = true`."
+  },
+  {
+   "rule": "R02",
+   "url": "https://code.claude.com/docs/en/permissions",
+   "found": true,
+   "fetched": true,
+   "quote": "Connected without asking, approved or not."
+  },
+  {
+   "rule": "R02",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Administrators set it so a user's own settings can't broaden what the managed allowlist permits."
+  },
+  {
+   "rule": "R02",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "If `mcp_servers` is present but empty, the local client disables all MCP servers."
+  },
+  {
+   "rule": "R03",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Prevent anyone from entering `bypassPermissions` mode. Claude Code then rejects the `--dangerously-skip-permissions` flag"
+  },
+  {
+   "rule": "R03",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "This example blocks `--ask-for-approval never` and `--sandbox danger-full-access` (including `--yolo`):"
+  },
+  {
+   "rule": "R04",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "a missing dependency such as bubblewrap on Linux blocks Claude Code from starting rather than falling back to unsandboxed execution"
+  },
+  {
+   "rule": "R04",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "For Codex 0.138.0 or later, prefer permission profiles with `allowed_permission_profiles` and managed `default_permissions`. Use `allowed_sandbox_modes` only for legacy deployments that still configure `sandbox_mode`."
+  },
+  {
+   "rule": "R05",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "Most of the machine, including credential files such as `~/.ssh` and `~/.aws/credentials`"
+  },
+  {
+   "rule": "R05",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "A `denyRead` entry doesn't stop the Read tool"
+  },
+  {
+   "rule": "R05",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Admins can deny reads for exact paths or glob patterns with `[permissions.filesystem]`. Users can't weaken these requirements with local configuration."
+  },
+  {
+   "rule": "R06",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Unset or mask an environment variable inside the sandbox"
+  },
+  {
+   "rule": "R07",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Claude Code then honors only `allowedDomains` and `WebFetch(domain:...)` allow rules from managed settings, ignores domains from user, project, local, and `--settings` settings, and blocks a non-allowed domain automatically instead of prompting."
+  },
+  {
+   "rule": "R07",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Set `experimental_network.enabled = true` to activate the managed proxy; domain rules alone do not make the proxy active."
+  },
+  {
+   "rule": "R08",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Claude Code then ignores `allow`, `ask`, and `deny` rules in user, project, local, and `--settings` files, ignores `--allowedTools`"
+  },
+  {
+   "rule": "R08",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Local configuration can't relax a managed denial."
+  },
+  {
+   "rule": "R09",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "An empty array is a complete lockdown that blocks every marketplace source, including the official Anthropic marketplace"
+  },
+  {
+   "rule": "R09",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Reject the `--plugin-dir`, `--plugin-url`, `--agents`, and `--mcp-config` CLI flags at startup, which users could otherwise pass to bypass `strictKnownMarketplaces` for a single run."
+  },
+  {
+   "rule": "R09",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "These requirements reject unmatched marketplace add, plugin install, and configured Git marketplace refresh operations."
+  },
+  {
+   "rule": "R10",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "A `true` in managed settings can't be overridden by `false` elsewhere."
+  },
+  {
+   "rule": "R11",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Background auto-updates and `claude update` skip versions above the ceiling"
+  },
+  {
+   "rule": "R11",
+   "url": "https://code.claude.com/docs/en/managed-settings",
+   "found": true,
+   "fetched": true,
+   "quote": "`requiredMinimumVersion` and `requiredMaximumVersion` fail open by design: an invalid value is dropped rather than enforced."
+  },
+  {
+   "rule": "R11",
+   "url": "https://developers.openai.com/codex/config-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Enforce whether Codex checks for updates when it starts."
+  },
+  {
+   "rule": "R12",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Only a managed source enforces the restriction; a single UUID in any other settings file pre-selects the organization during login without restricting it."
+  },
+  {
+   "rule": "R12",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Codex ignores these four fields in cloud-managed requirements."
+  },
+  {
+   "rule": "R13",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "`allowed_web_search_modes = []` allows only `\"disabled\"`."
+  },
+  {
+   "rule": "R14",
+   "url": "https://code.claude.com/docs/en/managed-settings",
+   "found": true,
+   "fetched": true,
+   "quote": "On WSL, `/etc/claude-code` is user-writable as well, and the `wslInheritsWindowsSettings` entry says when the Windows documents stand above it."
+  },
+  {
+   "rule": "R15",
+   "url": "https://code.claude.com/docs/en/managed-settings",
+   "found": true,
+   "fetched": true,
+   "quote": "The HKCU registry is user-writable and isn't one."
+  },
+  {
+   "rule": "R15",
+   "url": "https://code.claude.com/docs/en/managed-settings",
+   "found": true,
+   "fetched": true,
+   "quote": "when HKCU is the only source and no host supplies parent settings, HKCU applies like any selected source."
+  },
+  {
+   "rule": "R15",
+   "url": "https://github.com/anthropics/claude-code/security/advisories/GHSA-5cwg-9f6j-9jvx",
+   "found": true,
+   "fetched": true,
+   "quote": "On Windows, Claude Code loaded system-wide default configuration from `C:\\ProgramData\\ClaudeCode\\managed-settings.json` without validating directory ownership or access permissions."
+  },
+  {
+   "rule": "R16",
+   "url": "https://code.claude.com/docs/en/settings",
+   "found": true,
+   "fetched": true,
+   "quote": "Nothing in your own settings files or `--settings` overrides a managed key"
+  },
+  {
+   "rule": "R16",
+   "url": "https://github.com/anthropics/claude-code/security/advisories/GHSA-jh7p-qr78-84p7",
+   "found": true,
+   "fetched": true,
+   "quote": "the repository included a settings file that set ANTHROPIC_BASE_URL to an attacker-controlled endpoint, Claude Code would issue API requests before showing the trust prompt, including potentially leaking the user's API keys."
+  },
+  {
+   "rule": "R16",
+   "url": "https://developers.openai.com/codex/config-advanced",
+   "found": true,
+   "fetched": true,
+   "quote": "Codex ignores the following keys in project-local `.codex/config.toml` and prints a startup warning when it sees them: `openai_base_url`, `chatgpt_base_url`"
+  },
+  {
+   "rule": "R17",
+   "url": "https://code.claude.com/docs/en/permissions",
+   "found": true,
+   "fetched": true,
+   "quote": "Pass `--setting-sources user`, or set the SDK's `settingSources` without project settings, so Claude Code reads neither the project's settings files nor its `.mcp.json`"
+  },
+  {
+   "rule": "R17",
+   "url": "https://code.claude.com/docs/en/permissions",
+   "found": true,
+   "fetched": true,
+   "quote": "A `claude -p` run or an SDK session never shows it"
+  },
+  {
+   "rule": "R17",
+   "url": "https://developers.openai.com/codex/config-advanced",
+   "found": true,
+   "fetched": true,
+   "quote": "For security, Codex loads project-scoped config files only when the project is trusted."
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "agents": {
+  "claude": {
+   "versions_tested": 2,
+   "admitted": [],
+   "denied": [
+    "2.1.150",
+    "2.1.312"
+   ],
+   "regressions": []
+  }
+ },
+ "versions_tested": 2,
+ "regressions": 0
+}
