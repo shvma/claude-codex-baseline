@@ -3,11 +3,6 @@
   "claude": {
    "versions_tested": 27,
    "admitted": [
-    "2.1.193",
-    "2.1.242",
-    "2.1.257",
-    "2.1.260",
-    "2.1.282",
     "2.1.285",
     "2.1.291",
     "2.1.292",
@@ -31,18 +26,83 @@
     "2.1.312"
    ],
    "denied": [
-    "2.1.150"
+    "2.1.150",
+    "2.1.193",
+    "2.1.242",
+    "2.1.257",
+    "2.1.260",
+    "2.1.282"
    ],
    "regressions": [],
    "denial_reasons": {
     "2.1.150": [
+     "below_min_version:R03>=2.1.223",
+     "below_min_version:R09>=2.1.193",
+     "below_min_version:R20>=2.1.285",
      "sideload_mcp_flag:did_not_run"
+    ],
+    "2.1.193": [
+     "below_min_version:R03>=2.1.223",
+     "below_min_version:R20>=2.1.285"
+    ],
+    "2.1.242": [
+     "below_min_version:R20>=2.1.285"
+    ],
+    "2.1.257": [
+     "below_min_version:R20>=2.1.285"
+    ],
+    "2.1.260": [
+     "below_min_version:R20>=2.1.285"
+    ],
+    "2.1.282": [
+     "below_min_version:R20>=2.1.285"
+    ]
+   },
+   "min_versions": {
+    "R03": "2.1.223",
+    "R09": "2.1.193",
+    "R20": "2.1.285"
+   },
+   "evidence": {
+    "fingerprinted": [
+     "2.1.150",
+     "2.1.193",
+     "2.1.242",
+     "2.1.257"
+    ],
+    "legacy": [
+     "2.1.260",
+     "2.1.282",
+     "2.1.285",
+     "2.1.291",
+     "2.1.292",
+     "2.1.293",
+     "2.1.294",
+     "2.1.295",
+     "2.1.296",
+     "2.1.299",
+     "2.1.300",
+     "2.1.301",
+     "2.1.302",
+     "2.1.303",
+     "2.1.304",
+     "2.1.305",
+     "2.1.306",
+     "2.1.307",
+     "2.1.308",
+     "2.1.309",
+     "2.1.310",
+     "2.1.311",
+     "2.1.312"
     ]
    }
   },
   "codex": {
    "versions_tested": 18,
-   "admitted": [
+   "admitted": [],
+   "denied": [
+    "0.137.0",
+    "0.138.0",
     "0.156.1",
     "0.157.0",
     "0.157.1",
@@ -60,17 +120,106 @@
     "0.164.0",
     "0.165.0"
    ],
-   "denied": [
-    "0.137.0",
-    "0.138.0"
-   ],
    "regressions": [],
    "denial_reasons": {
     "0.137.0": [
+     "below_min_version:R04>=0.138.0",
+     "below_min_version:R16>=0.156.0",
+     "below_min_version:R21>=0.166.0",
+     "policy_ignored:approval_never:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:bypass_all_flag:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:repo_hook:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:repo_mcp:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:sandbox_full_access:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:user_config_relax:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
      "repo_hook:invalid_control"
     ],
     "0.138.0": [
+     "below_min_version:R16>=0.156.0",
+     "below_min_version:R21>=0.166.0",
+     "policy_ignored:approval_never:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:bypass_all_flag:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:repo_hook:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:repo_mcp:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:sandbox_full_access:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
+     "policy_ignored:user_config_relax:Ignoring unknown `features` requirement `in_app_updates` from /etc/codex/requirements.toml",
      "repo_hook:invalid_control"
+    ],
+    "0.156.1": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.157.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.157.1": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.158.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.159.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.159.1": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.159.2": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.159.3": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.160.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.160.1": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.161.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.162.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.162.1": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.163.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.164.0": [
+     "below_min_version:R21>=0.166.0"
+    ],
+    "0.165.0": [
+     "below_min_version:R21>=0.166.0"
+    ]
+   },
+   "min_versions": {
+    "R04": "0.138.0",
+    "R16": "0.156.0",
+    "R21": "0.166.0"
+   },
+   "evidence": {
+    "fingerprinted": [],
+    "legacy": [
+     "0.137.0",
+     "0.138.0",
+     "0.156.1",
+     "0.157.0",
+     "0.157.1",
+     "0.158.0",
+     "0.159.0",
+     "0.159.1",
+     "0.159.2",
+     "0.159.3",
+     "0.160.0",
+     "0.160.1",
+     "0.161.0",
+     "0.162.0",
+     "0.162.1",
+     "0.163.0",
+     "0.164.0",
+     "0.165.0"
     ]
    }
   }

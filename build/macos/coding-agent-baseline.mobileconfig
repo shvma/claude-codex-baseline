@@ -189,6 +189,8 @@
 										<key>allowManagedDomainsOnly</key>
 										<true/>
 									</dict>
+									<key>autoAllowBashIfSandboxed</key>
+									<false/>
 								</dict>
 								<key>allowManagedPermissionRulesOnly</key>
 								<true/>
@@ -200,11 +202,27 @@
 								<true/>
 								<key>autoUpdatesChannel</key>
 								<string>stable</string>
+								<key>requiredMinimumVersion</key>
+								<string>2.1.285</string>
 								<key>env</key>
 								<dict>
 									<key>ANTHROPIC_BASE_URL</key>
 									<string>https://api.anthropic.com</string>
+									<key>CLAUDE_CODE_ENABLE_TELEMETRY</key>
+									<string>1</string>
+									<key>OTEL_METRICS_EXPORTER</key>
+									<string>otlp</string>
+									<key>OTEL_LOGS_EXPORTER</key>
+									<string>otlp</string>
+									<key>OTEL_EXPORTER_OTLP_PROTOCOL</key>
+									<string>http/protobuf</string>
+									<key>OTEL_EXPORTER_OTLP_ENDPOINT</key>
+									<string>https://otel-collector.example.org:4318</string>
 								</dict>
+								<key>disableAutoMode</key>
+								<string>disable</string>
+								<key>cleanupPeriodDays</key>
+								<integer>14</integer>
 							</dict>
 						</dict>
 					</array>
@@ -232,7 +250,7 @@
 							<key>mcx_preference_settings</key>
 							<dict>
 								<key>requirements_toml_base64</key>
-								<string>YWxsb3dfbWFuYWdlZF9ob29rc19vbmx5ID0gdHJ1ZQphbGxvd2VkX2FwcHJvdmFsX3BvbGljaWVzID0gWyJ1bnRydXN0ZWQiLCAib24tcmVxdWVzdCJdCmFsbG93ZWRfc2FuZGJveF9tb2RlcyA9IFsicmVhZC1vbmx5IiwgIndvcmtzcGFjZS13cml0ZSJdCmNoZWNrX2Zvcl91cGRhdGVfb25fc3RhcnR1cCA9IGZhbHNlCmFsbG93ZWRfd2ViX3NlYXJjaF9tb2RlcyA9IFtdCgpbbWNwX3NlcnZlcnNdCgpbcGVybWlzc2lvbnMuZmlsZXN5c3RlbV0KZGVueV9yZWFkID0gWyJ+Ly5zc2giLCAifi8uYXdzIiwgIn4vLmNvbmZpZy9nY2xvdWQiLCAifi8ua3ViZSIsICJ+Ly5kb2NrZXIvY29uZmlnLmpzb24iLCAifi8ubmV0cmMiLCAifi8ubnBtcmMiLCAifi8uY29uZmlnL2doIl0KCltleHBlcmltZW50YWxfbmV0d29ya10KZW5hYmxlZCA9IHRydWUKbWFuYWdlZF9hbGxvd2VkX2RvbWFpbnNfb25seSA9IHRydWUKCltleHBlcmltZW50YWxfbmV0d29yay5kb21haW5zXQoiZ2l0aHViLmNvbSIgPSAiYWxsb3ciCiJhcGkuZ2l0aHViLmNvbSIgPSAiYWxsb3ciCiJjb2RlbG9hZC5naXRodWIuY29tIiA9ICJhbGxvdyIKInJlZ2lzdHJ5Lm5wbWpzLm9yZyIgPSAiYWxsb3ciCiJweXBpLm9yZyIgPSAiYWxsb3ciCiJmaWxlcy5weXRob25ob3N0ZWQub3JnIiA9ICJhbGxvdyIKImFwaS5hbnRocm9waWMuY29tIiA9ICJhbGxvdyIKImFwaS5vcGVuYWkuY29tIiA9ICJhbGxvdyIKClttYXJrZXRwbGFjZXNdCnJlc3RyaWN0X3RvX2FsbG93ZWRfc291cmNlcyA9IHRydWUKClttYXJrZXRwbGFjZXMuYWxsb3dlZF9zb3VyY2VzXQoKW2ZlYXR1cmVzXQppbl9hcHBfdXBkYXRlcyA9IGZhbHNlCg==</string>
+								<string>YWxsb3dfbWFuYWdlZF9ob29rc19vbmx5ID0gdHJ1ZQphbGxvd2VkX2FwcHJvdmFsX3BvbGljaWVzID0gWyJ1bnRydXN0ZWQiLCAib24tcmVxdWVzdCJdCmRlZmF1bHRfcGVybWlzc2lvbnMgPSAiOndvcmtzcGFjZSIKYWxsb3dlZF9zYW5kYm94X21vZGVzID0gWyJyZWFkLW9ubHkiLCAid29ya3NwYWNlLXdyaXRlIl0KY2hlY2tfZm9yX3VwZGF0ZV9vbl9zdGFydHVwID0gZmFsc2UKYWxsb3dlZF93ZWJfc2VhcmNoX21vZGVzID0gW10KbW9kZWxfcHJvdmlkZXIgPSAib3BlbmFpIgphbGxvd2VkX2FwcHJvdmFsc19yZXZpZXdlcnMgPSBbInVzZXIiXQoKW21jcF9zZXJ2ZXJzXQoKW2FsbG93ZWRfcGVybWlzc2lvbl9wcm9maWxlc10KIjpyZWFkLW9ubHkiID0gdHJ1ZQoiOndvcmtzcGFjZSIgPSB0cnVlCgpbcGVybWlzc2lvbnMuZmlsZXN5c3RlbV0KZGVueV9yZWFkID0gWyJ+Ly5zc2giLCAifi8uYXdzIiwgIn4vLmNvbmZpZy9nY2xvdWQiLCAifi8ua3ViZSIsICJ+Ly5kb2NrZXIvY29uZmlnLmpzb24iLCAifi8ubmV0cmMiLCAifi8ubnBtcmMiLCAifi8uY29uZmlnL2doIl0KCltleHBlcmltZW50YWxfbmV0d29ya10KZW5hYmxlZCA9IHRydWUKbWFuYWdlZF9hbGxvd2VkX2RvbWFpbnNfb25seSA9IHRydWUKCltleHBlcmltZW50YWxfbmV0d29yay5kb21haW5zXQoiZ2l0aHViLmNvbSIgPSAiYWxsb3ciCiJhcGkuZ2l0aHViLmNvbSIgPSAiYWxsb3ciCiJjb2RlbG9hZC5naXRodWIuY29tIiA9ICJhbGxvdyIKInJlZ2lzdHJ5Lm5wbWpzLm9yZyIgPSAiYWxsb3ciCiJweXBpLm9yZyIgPSAiYWxsb3ciCiJmaWxlcy5weXRob25ob3N0ZWQub3JnIiA9ICJhbGxvdyIKImFwaS5hbnRocm9waWMuY29tIiA9ICJhbGxvdyIKImFwaS5vcGVuYWkuY29tIiA9ICJhbGxvdyIKClttYXJrZXRwbGFjZXNdCnJlc3RyaWN0X3RvX2FsbG93ZWRfc291cmNlcyA9IHRydWUKClttYXJrZXRwbGFjZXMuYWxsb3dlZF9zb3VyY2VzXQoKW2ZlYXR1cmVzXQppbl9hcHBfdXBkYXRlcyA9IGZhbHNlCgpbcnVsZXNdCnByZWZpeF9ydWxlcyA9IFt7cGF0dGVybiA9IFt7dG9rZW4gPSAiZ2l0In0sIHt0b2tlbiA9ICJwdXNoIn1dLCBkZWNpc2lvbiA9ICJwcm9tcHQiLCBqdXN0aWZpY2F0aW9uID0gIlB1Ymxpc2hpbmcgY29kZSBuZWVkcyBhIHBlcnNvbi4ifSwge3BhdHRlcm4gPSBbe2FueV9vZiA9IFsiY3VybCIsICJ3Z2V0IiwgInNjcCIsICJyc3luYyIsICJzc2giLCAiZ2giXX1dLCBkZWNpc2lvbiA9ICJwcm9tcHQiLCBqdXN0aWZpY2F0aW9uID0gIk1vdmVzIGRhdGEgb2ZmIHRoZSBtYWNoaW5lLiJ9XQoKW290ZWxdCmxvZ191c2VyX3Byb21wdCA9IGZhbHNlCgpbb3RlbC5leHBvcnRlci5vdGxwLWh0dHBdCmVuZHBvaW50ID0gImh0dHBzOi8vb3RlbC1jb2xsZWN0b3IuZXhhbXBsZS5vcmc6NDMxOC92MS9sb2dzIgpwcm90b2NvbCA9ICJiaW5hcnkiCg==</string>
 							</dict>
 						</dict>
 					</array>

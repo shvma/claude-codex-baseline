@@ -10,10 +10,27 @@
    "regressions": [],
    "denial_reasons": {
     "2.1.150": [
-     "repo_env_base_url:does_not_hold"
+     "below_min_version:R03>=2.1.223",
+     "below_min_version:R09>=2.1.193",
+     "below_min_version:R20>=2.1.285",
+     "unproven_hold:sideload_mcp_flag",
+     "repo_env_base_url:does_not_hold",
+     "sideload_mcp_flag:did_not_run"
     ],
     "2.1.312": [
      "repo_env_base_url:does_not_hold"
+    ]
+   },
+   "min_versions": {
+    "R03": "2.1.223",
+    "R09": "2.1.193",
+    "R20": "2.1.285"
+   },
+   "evidence": {
+    "fingerprinted": [],
+    "legacy": [
+     "2.1.150",
+     "2.1.312"
     ]
    }
   }

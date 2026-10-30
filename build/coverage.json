@@ -1,0 +1,619 @@
+{
+ "rules": {
+  "R01": {
+   "checks": [
+    "repo.hooks",
+    "repo.agent_hooks",
+    "gate.claude.repo_hook",
+    "gate.codex.repo_hook"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "allowManagedHooksOnly": true
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "allow_managed_hooks_only": true
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Repository hooks do not run"
+  },
+  "R02": {
+   "checks": [
+    "repo.mcp",
+    "repo.mcp_autoapprove",
+    "repo.agent_mcp",
+    "gate.claude.repo_mcp",
+    "gate.codex.repo_mcp"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "allowManagedMcpServersOnly": true,
+    "allowedMcpServers": []
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "mcp_servers": {}
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Only company-approved MCP servers connect"
+  },
+  "R03": {
+   "checks": [
+    "repo.default_mode",
+    "repo.agent_bypass",
+    "gate.claude.bypass_flag",
+    "gate.codex.approval_never",
+    "gate.codex.bypass_all_flag"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "permissions.disableBypassPermissionsMode": "disable"
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "allowed_approval_policies": [
+     "untrusted",
+     "on-request"
+    ]
+   },
+   "deployment": false,
+   "min_version": {
+    "claude": "2.1.223"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Approvals cannot be switched off"
+  },
+  "R04": {
+   "checks": [
+    "gate.codex.sandbox_full_access",
+    "gate.codex.bypass_all_flag"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "sandbox.allowAppleEvents": false,
+    "sandbox.allowUnsandboxedCommands": false,
+    "sandbox.enableWeakerNetworkIsolation": false,
+    "sandbox.enabled": true,
+    "sandbox.failIfUnavailable": true
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "allowed_permission_profiles": {
+     ":read-only": true,
+     ":workspace": true
+    },
+    "allowed_sandbox_modes": [
+     "read-only",
+     "workspace-write"
+    ],
+    "default_permissions": ":workspace"
+   },
+   "deployment": false,
+   "min_version": {
+    "codex": "0.138.0"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Shell commands run in the OS sandbox, with no way out"
+  },
+  "R05": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "permissions.deny": [
+     "Read(~/.ssh/**)",
+     "Read(~/.aws/**)",
+     "Read(~/.config/gcloud/**)",
+     "Read(~/.kube/**)",
+     "Read(~/.docker/config.json)",
+     "Read(~/.netrc)",
+     "Read(~/.npmrc)",
+     "Read(~/.config/gh/**)"
+    ],
+    "sandbox.credentials.files": [
+     {
+      "mode": "deny",
+      "path": "~/.ssh"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.aws"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.config/gcloud"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.kube"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.docker/config.json"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.netrc"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.npmrc"
+     },
+     {
+      "mode": "deny",
+      "path": "~/.config/gh"
+     }
+    ],
+    "sandbox.filesystem.allowManagedReadPathsOnly": true
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "permissions.filesystem.deny_read": [
+     "~/.ssh",
+     "~/.aws",
+     "~/.config/gcloud",
+     "~/.kube",
+     "~/.docker/config.json",
+     "~/.netrc",
+     "~/.npmrc",
+     "~/.config/gh"
+    ]
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Credential files on the machine are not readable by the agent"
+  },
+  "R06": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "sandbox.credentials.envVars": [
+     {
+      "mode": "deny",
+      "name": "GITHUB_TOKEN"
+     },
+     {
+      "mode": "deny",
+      "name": "GH_TOKEN"
+     },
+     {
+      "mode": "deny",
+      "name": "NPM_TOKEN"
+     },
+     {
+      "mode": "deny",
+      "name": "AWS_ACCESS_KEY_ID"
+     },
+     {
+      "mode": "deny",
+      "name": "AWS_SECRET_ACCESS_KEY"
+     },
+     {
+      "mode": "deny",
+      "name": "AWS_SESSION_TOKEN"
+     }
+    ]
+   },
+   "codex_coverage": "none",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Tokens in the environment do not reach agent commands"
+  },
+  "R07": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "sandbox.network.allowManagedDomainsOnly": true,
+    "sandbox.network.allowedDomains": [
+     "github.com",
+     "api.github.com",
+     "codeload.github.com",
+     "registry.npmjs.org",
+     "pypi.org",
+     "files.pythonhosted.org",
+     "api.anthropic.com",
+     "api.openai.com"
+    ]
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "experimental_network.domains": {
+     "api.anthropic.com": "allow",
+     "api.github.com": "allow",
+     "api.openai.com": "allow",
+     "codeload.github.com": "allow",
+     "files.pythonhosted.org": "allow",
+     "github.com": "allow",
+     "pypi.org": "allow",
+     "registry.npmjs.org": "allow"
+    },
+    "experimental_network.enabled": true,
+    "experimental_network.managed_allowed_domains_only": true
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Network egress only to company-approved domains"
+  },
+  "R08": {
+   "checks": [
+    "repo.allow_rules",
+    "gate.codex.user_config_relax"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "allowManagedPermissionRulesOnly": true
+   },
+   "codex_coverage": "built in",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Company permission rules cannot be widened locally"
+  },
+  "R09": {
+   "checks": [
+    "repo.marketplaces",
+    "repo.plugins",
+    "gate.claude.sideload_mcp_flag"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "disableSideloadFlags": true,
+    "strictKnownMarketplaces": []
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "marketplaces.allowed_sources": {},
+    "marketplaces.restrict_to_allowed_sources": true
+   },
+   "deployment": false,
+   "min_version": {
+    "claude": "2.1.193"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Plugins only from approved marketplaces, no sideloading"
+  },
+  "R10": {
+   "checks": [
+    "repo.skill_shell"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "disableSkillShellExecution": true
+   },
+   "codex_coverage": "none",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Skills cannot run inline shell"
+  },
+  "R11": {
+   "checks": [
+    "machine.version_admitted"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "autoUpdatesChannel": "stable",
+    "requiredMinimumVersion": "2.1.285"
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "check_for_update_on_startup": false,
+    "features.in_app_updates": false
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Only versions that passed the release gate start"
+  },
+  "R12": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {},
+   "codex_coverage": "key",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Sign-in only to the company tenant"
+  },
+  "R13": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "permissions.deny": [
+     "WebSearch"
+    ]
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "allowed_web_search_modes": []
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "No live web search"
+  },
+  "R14": {
+   "checks": [
+    "machine.wsl_chain"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "wslInheritsWindowsSettings": true
+   },
+   "codex_coverage": "none",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "windows"
+   ],
+   "title": "WSL sessions follow the Windows policy"
+  },
+  "R15": {
+   "checks": [
+    "machine.policy_delivered",
+    "machine.policy_file_owner",
+    "machine.server_managed"
+   ],
+   "claude_coverage": "deployment",
+   "claude_keys": {},
+   "codex_coverage": "deployment",
+   "codex_keys": {},
+   "deployment": true,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "The policy is delivered only through admin-owned sources"
+  },
+  "R16": {
+   "checks": [
+    "gate.claude.repo_env_base_url"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "env.ANTHROPIC_BASE_URL": "https://api.anthropic.com"
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "model_provider": "openai"
+   },
+   "deployment": false,
+   "min_version": {
+    "codex": "0.156.0"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "The model API endpoint is pinned by policy"
+  },
+  "R17": {
+   "checks": [
+    "gate.claude.repo_api_key_helper",
+    "repo.helper_command",
+    "repo.env"
+   ],
+   "claude_coverage": "deployment",
+   "claude_keys": {},
+   "codex_coverage": "built in",
+   "codex_keys": {},
+   "deployment": true,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Non-interactive runs in untrusted repositories ignore project settings"
+  },
+  "R18": {
+   "checks": [
+    "repo.default_mode"
+   ],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "disableAutoMode": "disable"
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "allowed_approvals_reviewers": [
+     "user"
+    ]
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "No model approves actions in place of the developer"
+  },
+  "R19": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "sandbox.autoAllowBashIfSandboxed": false
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "rules.prefix_rules": [
+     {
+      "decision": "prompt",
+      "justification": "Publishing code needs a person.",
+      "pattern": [
+       {
+        "token": "git"
+       },
+       {
+        "token": "push"
+       }
+      ]
+     },
+     {
+      "decision": "prompt",
+      "justification": "Moves data off the machine.",
+      "pattern": [
+       {
+        "any_of": [
+         "curl",
+         "wget",
+         "scp",
+         "rsync",
+         "ssh",
+         "gh"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Sandboxed commands still go through the permission flow"
+  },
+  "R20": {
+   "checks": [
+    "repo.sandbox_exceptions",
+    "machine.user_sandbox_exceptions"
+   ],
+   "claude_coverage": "deployment",
+   "claude_keys": {},
+   "codex_coverage": "none",
+   "codex_keys": {},
+   "deployment": true,
+   "min_version": {
+    "claude": "2.1.285"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Commands leave the sandbox only on the company's list"
+  },
+  "R21": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "env": {
+     "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.org:4318",
+     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+     "OTEL_LOGS_EXPORTER": "otlp",
+     "OTEL_METRICS_EXPORTER": "otlp"
+    }
+   },
+   "codex_coverage": "key",
+   "codex_keys": {
+    "otel.exporter": {
+     "otlp-http": {
+      "endpoint": "https://otel-collector.example.org:4318/v1/logs",
+      "protocol": "binary"
+     }
+    },
+    "otel.log_user_prompt": false
+   },
+   "deployment": false,
+   "min_version": {
+    "codex": "0.166.0"
+   },
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Agent activity is exported to the company's collector"
+  },
+  "R22": {
+   "checks": [],
+   "claude_coverage": "key",
+   "claude_keys": {
+    "cleanupPeriodDays": 14
+   },
+   "codex_coverage": "none",
+   "codex_keys": {},
+   "deployment": false,
+   "min_version": {},
+   "platforms": [
+    "macos",
+    "linux",
+    "windows"
+   ],
+   "title": "Local transcripts are kept for two weeks, not a month"
+  }
+ }
+}

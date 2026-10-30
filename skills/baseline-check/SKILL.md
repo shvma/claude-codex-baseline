@@ -21,13 +21,21 @@ says. Do not change any system file, registry key or profile.
    - `does_not_hold` on `*.policy_delivered`, `*.policy_file_owner`, `claude.no_user_writable_policy`
      or `claude.wsl_chain` means the company policy can be absent or replaced on this machine. Say which
      rule (see `baseline/rules.yaml`) is affected.
+   - `*.policy_matches_baseline` compares the policy the agent applies — every managed source combined
+     the way the vendor documents it — with `build/`. A stricter value passes; a looser, missing or
+     unknown key fails, and the evidence names the path.
    - `could_not_run` is not a pass. Say what was missing (for example, the agent is not on PATH).
+     `claude.server_managed` and `codex.cloud_requirements` are always reported: a claude.ai, gateway
+     or ChatGPT-workspace policy ranks above the local one and this check cannot see it.
+   - `claude.user_sandbox_exceptions` failing means the developer's own settings take commands out of
+     the sandbox (R20); no managed key prevents that.
 
 3. Report the repository findings, split in two groups:
    - **neutralised by the baseline**: present in the repository, but the baseline disables it *if* the
      machine checks above hold. If they do not hold, these findings are live. Findings marked R17 are
      neutralised in non-interactive runs only when the agent is started through
-     `wrappers/claude-untrusted`; in an interactive session they wait for the trust dialog.
+     `wrappers/claude-untrusted`; in an interactive session they wait for the trust dialog. A finding
+     that says "needs Claude Code 2.1.x+" is neutralised only on that version or later.
    - **not covered by the baseline**: will act when the repository is opened or used, whatever the
      policy. Name the file and what it does.
 

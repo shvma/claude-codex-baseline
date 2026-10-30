@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from probelib import (API_LOG, ATTACKER_LOG, CANARY, HOME, TOOL_FILE, fresh_repo, install_policy, lines,
-                      reset, run_as_dev, run_probes)
+                      reset, run_as_dev, run_probes, warnings)
 
 POLICY_SRC = Path("/build/claude/managed-settings.json")
 POLICY_DST = Path("/etc/claude-code/managed-settings.json")
@@ -70,8 +70,8 @@ def run_one(spec, with_policy):
     else:
         validated_refusal = False
     return {"fired": spec["fired"](), "started": started, "exit": code,
-            "validated_refusal": validated_refusal,
-            "output": out[-1500:]}
+            "validated_refusal": validated_refusal, "refusal_required": bool(with_policy and spec.get("refusal")),
+            "warnings": warnings(out), "output": out[-1500:]}
 
 
 if __name__ == "__main__":

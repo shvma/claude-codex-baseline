@@ -159,28 +159,44 @@ $claude = @'
         "api.openai.com"
       ],
       "allowManagedDomainsOnly": true
-    }
+    },
+    "autoAllowBashIfSandboxed": false
   },
   "allowManagedPermissionRulesOnly": true,
   "strictKnownMarketplaces": [],
   "disableSideloadFlags": true,
   "disableSkillShellExecution": true,
   "autoUpdatesChannel": "stable",
+  "requiredMinimumVersion": "2.1.285",
   "wslInheritsWindowsSettings": true,
   "env": {
-    "ANTHROPIC_BASE_URL": "https://api.anthropic.com"
-  }
+    "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.org:4318"
+  },
+  "disableAutoMode": "disable",
+  "cleanupPeriodDays": 14
 }
 '@
 
 $codex = @'
 allow_managed_hooks_only = true
 allowed_approval_policies = ["untrusted", "on-request"]
+default_permissions = ":workspace"
 allowed_sandbox_modes = ["read-only", "workspace-write"]
 check_for_update_on_startup = false
 allowed_web_search_modes = []
+model_provider = "openai"
+allowed_approvals_reviewers = ["user"]
 
 [mcp_servers]
+
+[allowed_permission_profiles]
+":read-only" = true
+":workspace" = true
 
 [permissions.filesystem]
 deny_read = ["~/.ssh", "~/.aws", "~/.config/gcloud", "~/.kube", "~/.docker/config.json", "~/.netrc", "~/.npmrc", "~/.config/gh"]
@@ -206,6 +222,16 @@ restrict_to_allowed_sources = true
 
 [features]
 in_app_updates = false
+
+[rules]
+prefix_rules = [{pattern = [{token = "git"}, {token = "push"}], decision = "prompt", justification = "Publishing code needs a person."}, {pattern = [{any_of = ["curl", "wget", "scp", "rsync", "ssh", "gh"]}], decision = "prompt", justification = "Moves data off the machine."}]
+
+[otel]
+log_user_prompt = false
+
+[otel.exporter.otlp-http]
+endpoint = "https://otel-collector.example.org:4318/v1/logs"
+protocol = "binary"
 '@
 
 Write-AdminOnlyFile (Join-Path $env:ProgramFiles 'ClaudeCode') 'managed-settings.json' $claude
