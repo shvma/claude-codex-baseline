@@ -1,5 +1,5 @@
 {
- "checked": "2026-10-28",
+ "checked": "2026-10-30",
  "quotes": [
   {
    "rule": "R01",
@@ -17,6 +17,13 @@
   },
   {
    "rule": "R01",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "only managed hooks run, plus Agent SDK hooks and hooks from plugins your managed settings force-enable"
+  },
+  {
+   "rule": "R01",
    "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
    "found": true,
    "fetched": true,
@@ -28,6 +35,13 @@
    "found": true,
    "fetched": true,
    "quote": "Connected without asking, approved or not."
+  },
+  {
+   "rule": "R02",
+   "url": "https://code.claude.com/docs/en/sub-agents",
+   "found": true,
+   "fetched": true,
+   "quote": "Managed-settings restrictions apply to every subagent regardless of how it is defined."
   },
   {
    "rule": "R02",
@@ -52,6 +66,13 @@
   },
   {
    "rule": "R03",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Before v2.1.223, Claude Code applied the frontmatter permission mode even with bypass disabled."
+  },
+  {
+   "rule": "R03",
    "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
    "found": true,
    "fetched": true,
@@ -70,6 +91,13 @@
    "found": true,
    "fetched": true,
    "quote": "For Codex 0.138.0 or later, prefer permission profiles with `allowed_permission_profiles` and managed `default_permissions`. Use `allowed_sandbox_modes` only for legacy deployments that still configure `sandbox_mode`."
+  },
+  {
+   "rule": "R04",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "When present, the table is the complete list of allowed profiles. It allows profiles set to `true` and denies profiles omitted or set to `false`, including built-ins added in future Codex versions."
   },
   {
    "rule": "R05",
@@ -140,6 +168,20 @@
    "found": true,
    "fetched": true,
    "quote": "Reject the `--plugin-dir`, `--plugin-url`, `--agents`, and `--mcp-config` CLI flags at startup, which users could otherwise pass to bypass `strictKnownMarketplaces` for a single run."
+  },
+  {
+   "rule": "R09",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Claude Code exits with an error naming the rejected flags."
+  },
+  {
+   "rule": "R09",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Requires Claude Code v2.1.193 or later."
   },
   {
    "rule": "R09",
@@ -247,6 +289,13 @@
    "quote": "Codex ignores the following keys in project-local `.codex/config.toml` and prints a startup warning when it sees them: `openai_base_url`, `chatgpt_base_url`"
   },
   {
+   "rule": "R16",
+   "url": "https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/codex-rs/config/src/config_requirements.rs",
+   "found": true,
+   "fetched": true,
+   "quote": "/// Exact provider selection, overriding local and session configuration."
+  },
+  {
    "rule": "R17",
    "url": "https://code.claude.com/docs/en/permissions",
    "found": true,
@@ -266,6 +315,111 @@
    "found": true,
    "fetched": true,
    "quote": "For security, Codex loads project-scoped config files only when the project is trusted."
+  },
+  {
+   "rule": "R18",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Administrators set it in managed settings to prevent developers in their organization from using auto mode."
+  },
+  {
+   "rule": "R18",
+   "url": "https://code.claude.com/docs/en/permission-modes",
+   "found": true,
+   "fetched": true,
+   "quote": "In auto mode, a second model, the classifier, reviews actions instead of you"
+  },
+  {
+   "rule": "R18",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Use `allowed_approvals_reviewers` to require or allow automatic review."
+  },
+  {
+   "rule": "R19",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Let Claude Code run sandboxed Bash commands without a permission prompt."
+  },
+  {
+   "rule": "R19",
+   "url": "https://code.claude.com/docs/en/settings-reference",
+   "found": true,
+   "fetched": true,
+   "quote": "Set it to `false` to send sandboxed commands through the regular permission flow too"
+  },
+  {
+   "rule": "R19",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Admins can also enforce restrictive command rules from `requirements.toml` using a `[rules]` table."
+  },
+  {
+   "rule": "R20",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "It ignores these settings in a repository's `.claude/settings.json` and `.claude/settings.local.json`:"
+  },
+  {
+   "rule": "R20",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "Most of them, such as `excludedCommands` and `filesystem.allowWrite`, have no managed-only lock"
+  },
+  {
+   "rule": "R20",
+   "url": "https://code.claude.com/docs/en/sandboxing",
+   "found": true,
+   "fetched": true,
+   "quote": "Requires Claude Code v2.1.285 or later. From v2.1.282 to v2.1.284, the same settings made Claude Code ignore a repository's `excludedCommands` entries."
+  },
+  {
+   "rule": "R21",
+   "url": "https://code.claude.com/docs/en/monitoring-usage",
+   "found": true,
+   "fetched": true,
+   "quote": "Administrators can configure OpenTelemetry settings for all users through the managed settings file."
+  },
+  {
+   "rule": "R21",
+   "url": "https://code.claude.com/docs/en/monitoring-usage",
+   "found": true,
+   "fetched": true,
+   "quote": "so a repository can't use them to turn telemetry on, choose where it goes, or capture content."
+  },
+  {
+   "rule": "R21",
+   "url": "https://developers.openai.com/codex/enterprise/managed-configuration",
+   "found": true,
+   "fetched": true,
+   "quote": "Use managed configuration to pin OTel settings (exporter, environment), but keep `log_user_prompt = false` unless your policy explicitly allows storing prompt contents."
+  },
+  {
+   "rule": "R21",
+   "url": "https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/codex-rs/config/src/config_requirements.rs",
+   "found": true,
+   "fetched": true,
+   "quote": "/// OTEL settings that may be managed through `requirements.toml`."
+  },
+  {
+   "rule": "R22",
+   "url": "https://code.claude.com/docs/en/claude-directory",
+   "found": true,
+   "fetched": true,
+   "quote": "If a tool reads a `.env` file or a command prints a credential, that value is written to `projects/<project>/<session>.jsonl`."
+  },
+  {
+   "rule": "R22",
+   "url": "https://code.claude.com/docs/en/claude-directory",
+   "found": true,
+   "fetched": true,
+   "quote": "Lower `cleanupPeriodDays` to shorten how long Claude Code keeps transcripts"
   }
  ]
 }

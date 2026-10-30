@@ -16,14 +16,26 @@ marketplaces:
 
 api:
   claude_base_url: https://api.anthropic.com   # or the company's LLM gateway
+  codex_model_provider: openai                 # or the id of a provider the company defines (R16)
 
 versions:
   claude:
-    min: null       # e.g. "2.1.300" — set from the release gate's admitted range
-    max: null
+    min: "2.1.285"  # the oldest release that enforces every rule (min_version in rules.yaml); build.py refuses lower
+    max: null       # set from the release gate's admitted range
 
 login:
   claude_method: null      # "claudeai" | "console" | "gateway"
   claude_org_uuid: null
   codex_methods: null      # e.g. [chatgpt]
   codex_workspaces: null   # e.g. ["<workspace id>"]
+
+# Where agent telemetry goes (R21). Replace the collector; prompt text is not exported.
+telemetry:
+  claude_env:
+    CLAUDE_CODE_ENABLE_TELEMETRY: "1"
+    OTEL_METRICS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_EXPORTER_OTLP_ENDPOINT: https://otel-collector.example.org:4318
+  codex_exporter:
+    otlp-http: {endpoint: "https://otel-collector.example.org:4318/v1/logs", protocol: binary}

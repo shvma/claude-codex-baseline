@@ -8,6 +8,7 @@ Outcome: holds / does_not_hold / invalid_control / did_not_run.
 """
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -38,6 +39,15 @@ def run_as_dev(cmd, cwd, env, timeout=30):
     except ProcessLookupError:
         pass
     return code, out.decode("utf-8", "replace")
+
+
+# Lines in which the agent reports what it made of the policy. Kept whole, because `output` keeps only the
+# last 1500 characters and a warning printed early would be lost; gate/decide.py denies on ignored keys.
+WARNING_LINE = re.compile(r"^.*(?:warning|ignor|invalid|unknown|disallowed).*$", re.M | re.I)
+
+
+def warnings(out):
+    return WARNING_LINE.findall(out)[:60]
 
 
 def lines(path):
@@ -85,6 +95,8 @@ def judge(control, policy):
         return "invalid_control"
     if policy["fired"]:
         return "does_not_hold"
+    if policy.get("refusal_required") and not policy.get("validated_refusal"):
+        return "does_not_hold"  # the flag was accepted; something else stopped the server, not this rule
     if not policy["started"]:
         return "did_not_run"
     if policy.get("exit") != 0 and not policy.get("validated_refusal"):

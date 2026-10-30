@@ -10,7 +10,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from probelib import API_LOG, CANARY, HOME, fresh_repo, install_policy, lines, reset, run_as_dev, run_probes, write_home
+from probelib import (API_LOG, CANARY, HOME, fresh_repo, install_policy, lines, reset, run_as_dev, run_probes,
+                      warnings, write_home)
 
 POLICY_SRC = Path("/build/codex/requirements.toml")
 POLICY_DST = Path("/etc/codex/requirements.toml")
@@ -69,7 +70,8 @@ def run_one(spec, with_policy):
     _last["out"] = out
     time.sleep(0.3)
     return {"fired": spec["fired"](), "started": bool(lines(API_LOG)), "exit": code,
-            "approval": header("approval"), "sandbox": header("sandbox"), "output": out[-1500:]}
+            "approval": header("approval"), "sandbox": header("sandbox"), "warnings": warnings(out),
+            "output": out[-1500:]}
 
 
 if __name__ == "__main__":

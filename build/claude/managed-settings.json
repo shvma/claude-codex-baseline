@@ -99,14 +99,23 @@
         "api.openai.com"
       ],
       "allowManagedDomainsOnly": true
-    }
+    },
+    "autoAllowBashIfSandboxed": false
   },
   "allowManagedPermissionRulesOnly": true,
   "strictKnownMarketplaces": [],
   "disableSideloadFlags": true,
   "disableSkillShellExecution": true,
   "autoUpdatesChannel": "stable",
+  "requiredMinimumVersion": "2.1.285",
   "env": {
-    "ANTHROPIC_BASE_URL": "https://api.anthropic.com"
-  }
+    "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.org:4318"
+  },
+  "disableAutoMode": "disable",
+  "cleanupPeriodDays": 14
 }

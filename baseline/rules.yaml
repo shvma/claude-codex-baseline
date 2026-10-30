@@ -7,7 +7,10 @@
 #   codex:   dotted keys merged into requirements.toml
 #   gap:     where an agent has no equivalent control, said explicitly
 #   site:    values that differ per organisation, taken from site.yaml (see site.example.yaml)
-#   checks:  checker / release-gate probes that verify the rule holds
+#   checks:  checker findings (repo.*, machine.*) and release-gate probes (gate.<agent>.<probe>) that
+#            verify the rule; only ids that exist (tests/test_rules_refs.py). An empty list means no probe.
+#   min_version: first agent version that enforces every key the rule sets; the release gate denies
+#            older versions (gate/decide.py) and site.yaml versions.claude.min may not be lower
 #   sources: URL + verbatim quote of the decisive sentence
 #
 # Layers follow a four-layer GenAI threat model: data; model and supply chain; tools; infrastructure.
@@ -23,12 +26,14 @@ rules:
   layer: tools
   claude: {allowManagedHooksOnly: true}
   codex: {allow_managed_hooks_only: true}
-  checks: [repo.hooks, gate.claude.repo_hook, gate.codex.repo_hook]
+  checks: [repo.hooks, repo.agent_hooks, gate.claude.repo_hook, gate.codex.repo_hook]
   sources:
   - url: https://code.claude.com/docs/en/permissions
     quote: "Hooks in settings files, the `env` block and helper commands such as `apiKeyHelper`, and a project skill's hooks and `allowed-tools` | Used | Used."
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Restrict hook execution to hooks your organization deploys."
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "only managed hooks run, plus Agent SDK hooks and hooks from plugins your managed settings force-enable"
   - url: https://developers.openai.com/codex/enterprise/managed-configuration
     quote: "To skip user, project, session, and plugin hooks while still allowing managed hooks, set `allow_managed_hooks_only = true`."
 
@@ -41,10 +46,12 @@ rules:
   claude: {allowManagedMcpServersOnly: true, allowedMcpServers: []}
   codex: {mcp_servers: {}}
   site: {claude.allowedMcpServers: mcp_allowlist.claude, codex.mcp_servers: mcp_allowlist.codex}
-  checks: [repo.mcp, gate.claude.repo_mcp, gate.codex.repo_mcp]
+  checks: [repo.mcp, repo.mcp_autoapprove, repo.agent_mcp, gate.claude.repo_mcp, gate.codex.repo_mcp]
   sources:
   - url: https://code.claude.com/docs/en/permissions
     quote: "Connected without asking, approved or not."
+  - url: https://code.claude.com/docs/en/sub-agents
+    quote: "Managed-settings restrictions apply to every subagent regardless of how it is defined."
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Administrators set it so a user's own settings can't broaden what the managed allowlist permits."
   - url: https://developers.openai.com/codex/enterprise/managed-configuration
@@ -58,10 +65,13 @@ rules:
   layer: tools
   claude: {permissions.disableBypassPermissionsMode: disable}
   codex: {allowed_approval_policies: [untrusted, on-request]}
-  checks: [gate.claude.bypass_flag, gate.codex.approval_never]
+  min_version: {claude: 2.1.223}
+  checks: [repo.default_mode, repo.agent_bypass, gate.claude.bypass_flag, gate.codex.approval_never, gate.codex.bypass_all_flag]
   sources:
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Prevent anyone from entering `bypassPermissions` mode. Claude Code then rejects the `--dangerously-skip-permissions` flag"
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Before v2.1.223, Claude Code applied the frontmatter permission mode even with bypass disabled."
   - url: https://developers.openai.com/codex/enterprise/managed-configuration
     quote: "This example blocks `--ask-for-approval never` and `--sandbox danger-full-access` (including `--yolo`):"
 
@@ -77,17 +87,24 @@ rules:
     sandbox.allowUnsandboxedCommands: false
     sandbox.enableWeakerNetworkIsolation: false
     sandbox.allowAppleEvents: false
-  codex: {allowed_sandbox_modes: [read-only, workspace-write]}
+  codex:
+    allowed_permission_profiles: {":read-only": true, ":workspace": true}
+    default_permissions: ":workspace"
+    allowed_sandbox_modes: [read-only, workspace-write]
+  min_version: {codex: 0.138.0}
   gap:
     codex: >-
-      Codex 0.138.0+ prefers permission profiles (allowed_permission_profiles); allowed_sandbox_modes is
-      kept for deployments that still configure sandbox_mode.
-  checks: [gate.codex.sandbox_full_access]
+      allowed_permission_profiles and default_permissions are the control for Codex 0.138.0+; the
+      legacy allowed_sandbox_modes stays because the gate's sandbox probes select modes with -s and
+      sandbox_mode, and no run has shown that the profile allowlist alone refuses them.
+  checks: [gate.codex.sandbox_full_access, gate.codex.bypass_all_flag]
   sources:
   - url: https://code.claude.com/docs/en/sandboxing
     quote: "a missing dependency such as bubblewrap on Linux blocks Claude Code from starting rather than falling back to unsandboxed execution"
   - url: https://developers.openai.com/codex/enterprise/managed-configuration
     quote: "For Codex 0.138.0 or later, prefer permission profiles with `allowed_permission_profiles` and managed `default_permissions`. Use `allowed_sandbox_modes` only for legacy deployments that still configure `sandbox_mode`."
+  - url: https://developers.openai.com/codex/enterprise/managed-configuration
+    quote: "When present, the table is the complete list of allowed profiles. It allows profiles set to `true` and denies profiles omitted or set to `false`, including built-ins added in future Codex versions."
 
 - id: R05
   title: Credential files on the machine are not readable by the agent
@@ -108,7 +125,7 @@ rules:
   gap:
     claude: The sandbox does not cover the built-in Read tool, hence the separate permissions.deny rules.
     codex: "On native Windows, managed deny_read applies to direct file tools; shell subprocess reads don't use this sandbox rule."
-  checks: [gate.claude.read_ssh, gate.codex.read_ssh]
+  checks: []  # no gate probe reads a credential file yet
   sources:
   - url: https://code.claude.com/docs/en/sandboxing
     quote: "Most of the machine, including credential files such as `~/.ssh` and `~/.aws/credentials`"
@@ -146,7 +163,10 @@ rules:
     an empty list breaks package installs and pushes on day one. baseline/site.strict.yaml keeps
     everything closed for high-assurance machines.
   gap:
-    claude: Filtering is by host name; an allowed broad domain is itself an exfiltration path.
+    claude: >-
+      Filtering is by host name; an allowed broad domain is itself an exfiltration path. The starter
+      allowlist keeps github.com, where any account can receive a push or a gist: replace it with the
+      company's git host, or keep it only together with R19 (every command asks first).
     codex: The vendor marks [experimental_network] as experimental and subject to change.
   checks: []
   sources:
@@ -162,7 +182,7 @@ rules:
   claude: {allowManagedPermissionRulesOnly: true}
   gap:
     codex: Built in, no key needed — requirements are constraints that local configuration cannot relax.
-  checks: [gate.claude.local_allow_rule, gate.codex.user_config_relax]
+  checks: [repo.allow_rules, gate.codex.user_config_relax]  # no Claude Code probe for local allow rules yet
   sources:
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Claude Code then ignores `allow`, `ask`, and `deny` rules in user, project, local, and `--settings` files, ignores `--allowedTools`"
@@ -178,12 +198,17 @@ rules:
   claude: {strictKnownMarketplaces: [], disableSideloadFlags: true}
   codex: {marketplaces.restrict_to_allowed_sources: true}
   site: {claude.strictKnownMarketplaces: marketplaces.claude, codex.marketplaces.allowed_sources: marketplaces.codex}
-  checks: [gate.claude.sideload_flag]
+  min_version: {claude: 2.1.193}
+  checks: [repo.marketplaces, repo.plugins, gate.claude.sideload_mcp_flag]
   sources:
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "An empty array is a complete lockdown that blocks every marketplace source, including the official Anthropic marketplace"
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Reject the `--plugin-dir`, `--plugin-url`, `--agents`, and `--mcp-config` CLI flags at startup, which users could otherwise pass to bypass `strictKnownMarketplaces` for a single run."
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Claude Code exits with an error naming the rejected flags."
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Requires Claude Code v2.1.193 or later."
   - url: https://developers.openai.com/codex/enterprise/managed-configuration
     quote: "These requirements reject unmatched marketplace add, plugin install, and configured Git marketplace refresh operations."
 
@@ -194,7 +219,7 @@ rules:
   claude: {disableSkillShellExecution: true}
   gap:
     codex: No equivalent control was found.
-  checks: []
+  checks: [repo.skill_shell]
   sources:
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "A `true` in managed settings can't be overridden by `false` elsewhere."
@@ -212,7 +237,7 @@ rules:
     codex: >-
       No minimum or maximum version setting is documented; the version is held by the package the MDM
       deploys, with self-update turned off.
-  checks: [machine.version_window]
+  checks: [machine.version_admitted]
   sources:
   - url: https://code.claude.com/docs/en/settings-reference
     quote: "Background auto-updates and `claude update` skip versions above the ceiling"
@@ -275,7 +300,7 @@ rules:
   deployment: >-
     Profiles and scripts write only to the macOS managed preferences domain, HKLM and the system
     directories, with admin-only permissions. The checker fails when the selected source is user-writable.
-  checks: [machine.policy_source, machine.policy_file_owner]
+  checks: [machine.policy_delivered, machine.policy_file_owner, machine.server_managed]
   sources:
   - url: https://code.claude.com/docs/en/managed-settings
     quote: "The HKCU registry is user-writable and isn't one."
@@ -291,12 +316,16 @@ rules:
     there, API key included. In claude -p the project env block applies without a trust dialog; the
     vendor documents this. The release gate shows the leak without this rule and its absence with it.
   layer: infrastructure
-  site: {claude.env.ANTHROPIC_BASE_URL: api.claude_base_url}
+  site: {claude.env.ANTHROPIC_BASE_URL: api.claude_base_url, codex.model_provider: api.codex_model_provider}
+  min_version: {codex: 0.156.0}
   gap:
     claude: >-
       Only the API endpoint is pinned. Other variables in a repository's env block still apply in
       non-interactive runs unless they are started as R17 describes.
-    codex: Built in, no key needed — Codex ignores openai_base_url and model_provider in project config.
+    codex: >-
+      Project config is covered without a key: Codex ignores openai_base_url and model_provider there.
+      requirements.toml model_provider (in the source from rust-v0.156.0, absent in rust-v0.155.0)
+      also pins the provider against the user's own config.
   checks: [gate.claude.repo_env_base_url]
   sources:
   - url: https://code.claude.com/docs/en/settings
@@ -305,6 +334,8 @@ rules:
     quote: "the repository included a settings file that set ANTHROPIC_BASE_URL to an attacker-controlled endpoint, Claude Code would issue API requests before showing the trust prompt, including potentially leaking the user's API keys."
   - url: https://developers.openai.com/codex/config-advanced
     quote: "Codex ignores the following keys in project-local `.codex/config.toml` and prints a startup warning when it sees them: `openai_base_url`, `chatgpt_base_url`"
+  - url: https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/codex-rs/config/src/config_requirements.rs
+    quote: "/// Exact provider selection, overriding local and session configuration."
 
 - id: R17
   title: Non-interactive runs in untrusted repositories ignore project settings
@@ -329,3 +360,120 @@ rules:
     quote: "A `claude -p` run or an SDK session never shows it"
   - url: https://developers.openai.com/codex/config-advanced
     quote: "For security, Codex loads project-scoped config files only when the project is trusted."
+
+- id: R18
+  title: No model approves actions in place of the developer
+  threat: >-
+    Claude Code's auto mode and Codex's automatic reviewer let a second model approve commands. A prompt
+    injection in a file or tool result that the classifier misreads runs with nobody asked.
+  layer: tools
+  claude: {disableAutoMode: disable}
+  codex: {allowed_approvals_reviewers: [user]}
+  cost: >-
+    Developers lose the prompt-free auto mode; long sessions need more approvals or explicit managed
+    allow rules for routine commands.
+  checks: [repo.default_mode]  # no gate probe starts a session in auto mode yet
+  sources:
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Administrators set it in managed settings to prevent developers in their organization from using auto mode."
+  - url: https://code.claude.com/docs/en/permission-modes
+    quote: "In auto mode, a second model, the classifier, reviews actions instead of you"
+  - url: https://developers.openai.com/codex/enterprise/managed-configuration
+    quote: "Use `allowed_approvals_reviewers` to require or allow automatic review."
+
+- id: R19
+  title: Sandboxed commands still go through the permission flow
+  threat: >-
+    By default Claude Code runs every sandboxed Bash command without asking. Inside the sandbox the
+    agent can still write the workspace and reach every allowed domain, so a push to github.com or an
+    upload to an allowed registry leaves without a prompt.
+  layer: tools
+  claude: {sandbox.autoAllowBashIfSandboxed: false}
+  codex:
+    rules.prefix_rules:
+    - {pattern: [{token: git}, {token: push}], decision: prompt, justification: "Publishing code needs a person."}
+    - {pattern: [{any_of: [curl, wget, scp, rsync, ssh, gh]}], decision: prompt, justification: "Moves data off the machine."}
+  gap:
+    codex: >-
+      Codex has no key that sends every sandboxed command to the user under on-request; the [rules]
+      table asks only for the commands it lists.
+  cost: >-
+    Every Bash command prompts unless a managed allow rule covers it (allowManagedPermissionRulesOnly
+    ignores the developer's own). Put routine commands such as the test runner in managed
+    permissions.allow.
+  checks: []  # no gate probe runs a sandboxed command yet
+  sources:
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Let Claude Code run sandboxed Bash commands without a permission prompt."
+  - url: https://code.claude.com/docs/en/settings-reference
+    quote: "Set it to `false` to send sandboxed commands through the regular permission flow too"
+  - url: https://developers.openai.com/codex/enterprise/managed-configuration
+    quote: "Admins can also enforce restrictive command rules from `requirements.toml` using a `[rules]` table."
+
+- id: R20
+  title: Commands leave the sandbox only on the company's list
+  threat: >-
+    sandbox.excludedCommands runs matching commands outside the sandbox and sandbox.filesystem.allowWrite
+    opens paths for writing. A repository or the developer's own settings add entries such as "*" or
+    ~/.ssh.
+  layer: infrastructure
+  deployment: >-
+    No managed key locks these lists. R04 and R07 make the sandbox admin-required, so Claude Code 2.1.285+
+    ignores a repository's entries; the developer's ~/.claude/settings.json still applies, and
+    tools/check.py machine reports every entry there: detected, not prevented. Approved tools go into
+    managed excludedCommands.
+  min_version: {claude: 2.1.285}
+  gap:
+    codex: Codex has no excludedCommands equivalent; writable roots follow the permission profile (R04).
+  checks: [repo.sandbox_exceptions, machine.user_sandbox_exceptions]
+  sources:
+  - url: https://code.claude.com/docs/en/sandboxing
+    quote: "It ignores these settings in a repository's `.claude/settings.json` and `.claude/settings.local.json`:"
+  - url: https://code.claude.com/docs/en/sandboxing
+    quote: "Most of them, such as `excludedCommands` and `filesystem.allowWrite`, have no managed-only lock"
+  - url: https://code.claude.com/docs/en/sandboxing
+    quote: "Requires Claude Code v2.1.285 or later. From v2.1.282 to v2.1.284, the same settings made Claude Code ignore a repository's `excludedCommands` entries."
+
+- id: R21
+  title: Agent activity is exported to the company's collector
+  threat: >-
+    Without telemetry an incident leaves no record of which commands and tools an agent ran on which
+    machine; the only trace is the developer's local transcript (R22).
+  layer: infrastructure
+  codex: {otel.log_user_prompt: false}
+  site: {claude.env: telemetry.claude_env, codex.otel.exporter: telemetry.codex_exporter}
+  min_version: {codex: 0.166.0}
+  cost: >-
+    Developers' tool use is visible to the security team. Prompt text stays out of the export
+    (OTEL_LOG_USER_PROMPTS unset for Claude Code, log_user_prompt = false for Codex).
+  gap:
+    codex: >-
+      The [otel] table is in ConfigRequirementsToml from rust-v0.166.0 and absent in rust-v0.165.0;
+      older releases ignore unknown top-level requirements without a warning, so the gate denies them.
+  checks: []  # the gate's build sets no collector; telemetry is not probed
+  sources:
+  - url: https://code.claude.com/docs/en/monitoring-usage
+    quote: "Administrators can configure OpenTelemetry settings for all users through the managed settings file."
+  - url: https://code.claude.com/docs/en/monitoring-usage
+    quote: "so a repository can't use them to turn telemetry on, choose where it goes, or capture content."
+  - url: https://developers.openai.com/codex/enterprise/managed-configuration
+    quote: "Use managed configuration to pin OTel settings (exporter, environment), but keep `log_user_prompt = false` unless your policy explicitly allows storing prompt contents."
+  - url: https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/codex-rs/config/src/config_requirements.rs
+    quote: "/// OTEL settings that may be managed through `requirements.toml`."
+
+- id: R22
+  title: Local transcripts are kept for two weeks, not a month
+  threat: >-
+    Transcripts are plaintext files under ~/.claude that hold file contents and command output,
+    credentials included, for 30 days by default; any process running as the developer reads them.
+  layer: data
+  claude: {cleanupPeriodDays: 14}
+  cost: Sessions older than two weeks drop out of /resume.
+  gap:
+    codex: No requirements.toml key for session-history retention was found in config_requirements.rs.
+  checks: []
+  sources:
+  - url: https://code.claude.com/docs/en/claude-directory
+    quote: "If a tool reads a `.env` file or a command prints a credential, that value is written to `projects/<project>/<session>.jsonl`."
+  - url: https://code.claude.com/docs/en/claude-directory
+    quote: "Lower `cleanupPeriodDays` to shorten how long Claude Code keeps transcripts"

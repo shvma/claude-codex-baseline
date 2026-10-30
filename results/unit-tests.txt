@@ -1,10 +1,18 @@
+test_site_minimum_below_rule_minimum_refused (test_build.BuildTest) ... ok
+test_two_builds_identical_and_match_repository (test_build.BuildTest) ... ok
+test_direction_of_lists (test_check_repo.PolicyMismatchTest) ... ok
 test_missing_different_and_extra_reported (test_check_repo.PolicyMismatchTest) ... ok
 test_weakening_additions_fail_on_real_baseline (test_check_repo.PolicyMismatchTest) ... ok
 test_clean_repository_has_no_findings (test_check_repo.RepoModeTest) ... ok
-test_coverage_is_honest (test_check_repo.RepoModeTest) ... ok
+test_coverage_follows_the_build (test_check_repo.RepoModeTest)
+Coverage is derived from build/coverage.json and the built policies, so removing a key from the ... ok
+test_coverage_needs_the_rule_to_claim_the_check (test_check_repo.RepoModeTest) ... ok
 test_every_plant_is_reported (test_check_repo.RepoModeTest) ... ok
 test_inline_mcp_table_reported (test_check_repo.RepoModeTest) ... ok
 test_untracked_local_settings_ignored (test_check_repo.RepoModeTest) ... ok
+test_without_coverage_nothing_is_neutralised (test_check_repo.RepoModeTest) ... ok
+test_review_repository_is_reported (test_check_repo.ReviewRepositoryTest) ... ok
+test_sandbox_exceptions_in_repository (test_check_repo.ReviewRepositoryTest) ... ok
 test_claimed_hold_needs_observations (test_gate_decisions.AdmissionEvidenceTest) ... ok
 test_complete_valid_evidence (test_gate_decisions.AdmissionEvidenceTest) ... ok
 test_crash_or_timeout_after_api_contact_cannot_admit (test_gate_decisions.AdmissionEvidenceTest) ... ok
@@ -12,8 +20,55 @@ test_empty_and_malformed_files_deny (test_gate_decisions.AdmissionEvidenceTest) 
 test_install_and_container_failure_deny (test_gate_decisions.AdmissionEvidenceTest) ... ok
 test_invalid_control_cannot_admit (test_gate_decisions.AdmissionEvidenceTest) ... ok
 test_missing_duplicate_metadata_and_unknown_outcome_deny (test_gate_decisions.AdmissionEvidenceTest) ... ok
+test_ignored_requirement_in_agent_output_denies (test_gate_decisions.ReviewCasesTest) ... ok
+test_ignored_requirement_in_warnings_field_denies (test_gate_decisions.ReviewCasesTest) ... ok
+test_legacy_rows_are_labelled_and_can_be_required_away (test_gate_decisions.ReviewCasesTest) ... ok
+test_sideload_without_refusal_cannot_admit (test_gate_decisions.ReviewCasesTest) ... ok
+test_versions_below_rule_minimum_deny (test_gate_decisions.ReviewCasesTest) ... ok
+test_A_exact_build_holds (test_machine_sources.ClaudeSources) ... ok
+test_B_weakened_main_file_fails (test_machine_sources.ClaudeSources) ... ok
+test_C_dropin_weakens_fails (test_machine_sources.ClaudeSources) ... ok
+test_D_dropin_only_full_policy_holds (test_machine_sources.ClaudeSources) ... ok
+test_E_dropin_scalar_override_fails (test_machine_sources.ClaudeSources) ... ok
+test_F_hidden_dropin_ignored (test_machine_sources.ClaudeSources) ... ok
+test_G_other_extension_ignored (test_machine_sources.ClaudeSources) ... ok
+test_H_baseline_split_across_dropins_holds (test_machine_sources.ClaudeSources) ... ok
+test_K_macos_plist_plus_weakening_dropin_fails (test_machine_sources.ClaudeSources)
+first-wins selects the plist, but the drop-in still adds cross-source keys: a domain to the ... ok
+test_macos_plist_alone_holds (test_machine_sources.ClaudeSources) ... ok
+test_merge_in_plist_lets_lower_lists_in (test_machine_sources.ClaudeSources)
+merge set in the highest source: a lower source's allow rule joins the policy. ... ok
+test_merge_keeps_strictest_lock (test_machine_sources.ClaudeSources) ... ok
+test_no_policy (test_machine_sources.ClaudeSources) ... ok
+test_server_managed_cache_wins_over_local_policy (test_machine_sources.ClaudeSources) ... ok
+test_server_managed_not_visible (test_machine_sources.ClaudeSources) ... ok
+test_unparsable_dropin_reported (test_machine_sources.ClaudeSources) ... ok
+test_I_mdm_complete_file_weak_holds (test_machine_sources.CodexLayers)
+Every key the weak file sets is already set by MDM, the higher layer. ... ok
+test_cloud_requirements_not_visible (test_machine_sources.CodexLayers) ... ok
+test_lower_layer_fills_a_key_mdm_leaves_unset (test_machine_sources.CodexLayers) ... ok
+test_partial_mdm_and_weak_file_fail (test_machine_sources.CodexLayers) ... ok
+test_profile_turned_on_by_lower_layer_fails (test_machine_sources.CodexLayers) ... ok
+test_stricter_codex_passes (test_machine_sources.CodexLayers) ... ok
+test_windows_build_differs_from_unix_only_by_wsl_key (test_machine_sources.Harness) ... ok
+test_fewer_allowed_domains_passes (test_machine_sources.Tightening) ... ok
+test_higher_minimum_version_passes_lower_fails (test_machine_sources.Tightening) ... ok
+test_longer_retention_and_unknown_key_fail (test_machine_sources.Tightening) ... ok
+test_stricter_dropin_passes (test_machine_sources.Tightening) ... ok
+test_user_sandbox_exceptions_reported (test_machine_sources.UserSettings) ... ok
+test_user_settings_without_exceptions_hold (test_machine_sources.UserSettings) ... ok
+test_J_delivered_windows_policy_holds (test_machine_sources.Windows)
+The Windows build adds wslInheritsWindowsSettings; it is the baseline on Windows. ... ok
+test_hkcu_alone_fails (test_machine_sources.Windows) ... ok
+test_windows_file_policy_holds (test_machine_sources.Windows) ... ok
+test_every_check_exists (test_rules_refs.RuleReferencesTest) ... ok
+test_every_probe_belongs_to_a_rule (test_rules_refs.RuleReferencesTest) ... ok
+test_min_versions_are_versions (test_rules_refs.RuleReferencesTest) ... ok
+test_build_requirements_parse (test_toml.MiniTomlTest) ... ok
+test_same_as_tomllib (test_toml.MiniTomlTest) ... skipped 'tomllib needs Python 3.11+'
+test_unsupported_and_invalid_raise (test_toml.MiniTomlTest) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 0.151s
+Ran 64 tests in 0.488s
 
-OK
+OK (skipped=1)

@@ -18,6 +18,8 @@ Site file: `baseline/site.example.yaml`.
 | R04 | claude | `sandbox.allowUnsandboxedCommands` | all |
 | R04 | claude | `sandbox.enableWeakerNetworkIsolation` | all |
 | R04 | claude | `sandbox.allowAppleEvents` | all |
+| R04 | codex | `allowed_permission_profiles` | all |
+| R04 | codex | `default_permissions` | all |
 | R04 | codex | `allowed_sandbox_modes` | all |
 | R05 | claude | `sandbox.filesystem.allowManagedReadPathsOnly` | all |
 | R05 | claude | `sandbox.credentials.files` | all |
@@ -41,10 +43,21 @@ Site file: `baseline/site.example.yaml`.
 | R11 | claude | `autoUpdatesChannel` | all |
 | R11 | codex | `check_for_update_on_startup` | all |
 | R11 | codex | `features.in_app_updates` | all |
+| R11 | claude | `requiredMinimumVersion (site)` | all |
 | R13 | claude | `permissions.deny` | all |
 | R13 | codex | `allowed_web_search_modes` | all |
 | R14 | claude | `wslInheritsWindowsSettings` | windows |
 | R16 | claude | `env.ANTHROPIC_BASE_URL (site)` | all |
+| R16 | codex | `model_provider (site)` | all |
+| R18 | claude | `disableAutoMode` | all |
+| R18 | codex | `allowed_approvals_reviewers` | all |
+| R19 | claude | `sandbox.autoAllowBashIfSandboxed` | all |
+| R19 | codex | `rules.prefix_rules` | all |
+| R21 | codex | `otel.log_user_prompt` | all |
+| R21 | claude | `env (site)` | all |
+| R21 | codex | `otel.exporter (site)` | all |
+| R22 | claude | `cleanupPeriodDays` | all |
 
-Rules with no Codex control (see `gap` in rules.yaml): R06, R08, R10, R14, R16, R17.
-Rules with no Claude Code control: R16.
+Codex rules without a key (see `gap` and `deployment` in rules.yaml): built in: R08, R17; by deployment: R15; no control: R06, R10, R14, R20, R22.
+
+Claude Code rules without a key (see `gap` and `deployment` in rules.yaml): built in: none; by deployment: R15, R17, R20; no control: none.

@@ -151,6 +151,8 @@
 			<key>allowManagedDomainsOnly</key>
 			<true/>
 		</dict>
+		<key>autoAllowBashIfSandboxed</key>
+		<false/>
 	</dict>
 	<key>allowManagedPermissionRulesOnly</key>
 	<true/>
@@ -162,10 +164,26 @@
 	<true/>
 	<key>autoUpdatesChannel</key>
 	<string>stable</string>
+	<key>requiredMinimumVersion</key>
+	<string>2.1.285</string>
 	<key>env</key>
 	<dict>
 		<key>ANTHROPIC_BASE_URL</key>
 		<string>https://api.anthropic.com</string>
+		<key>CLAUDE_CODE_ENABLE_TELEMETRY</key>
+		<string>1</string>
+		<key>OTEL_METRICS_EXPORTER</key>
+		<string>otlp</string>
+		<key>OTEL_LOGS_EXPORTER</key>
+		<string>otlp</string>
+		<key>OTEL_EXPORTER_OTLP_PROTOCOL</key>
+		<string>http/protobuf</string>
+		<key>OTEL_EXPORTER_OTLP_ENDPOINT</key>
+		<string>https://otel-collector.example.org:4318</string>
 	</dict>
+	<key>disableAutoMode</key>
+	<string>disable</string>
+	<key>cleanupPeriodDays</key>
+	<integer>14</integer>
 </dict>
 </plist>

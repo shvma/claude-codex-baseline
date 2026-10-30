@@ -12,6 +12,7 @@ Writes to build/:
   jamf/com.openai.codex.plist
   intune/windows/Install-CodingAgentBaseline.ps1   Intune platform script
   MANIFEST.md                              which rule produced which key
+  coverage.json                            per rule: keys, checks, min_version; read by check.py and gate/decide.py
 Output is deterministic: the same input gives byte-identical files.
 """
 import argparse
@@ -33,11 +34,19 @@ def set_dotted(tree, dotted, value):
     keys = dotted.split(".")
     for k in keys[:-1]:
         tree = tree.setdefault(k, {})
-    last = keys[-1]
-    if isinstance(tree.get(last), list) and isinstance(value, list):
-        tree[last] = tree[last] + [v for v in value if v not in tree[last]]
+    merge_value(tree, keys[-1], value)
+
+
+def merge_value(tree, key, value):
+    """Lists union, tables merge key by key (two rules, or a rule and a site value, may fill one table)."""
+    old = tree.get(key)
+    if isinstance(old, list) and isinstance(value, list):
+        tree[key] = old + [v for v in value if v not in old]
+    elif isinstance(old, dict) and isinstance(value, dict):
+        for k, v in value.items():
+            merge_value(old, k, v)
     else:
-        tree[last] = copy.deepcopy(value)
+        tree[key] = copy.deepcopy(value)
 
 
 def get_dotted(tree, dotted):
@@ -67,7 +76,43 @@ def compose(rules, site, platform):
     return claude, codex, manifest
 
 
-# --- TOML: the subset requirements.toml needs (strings, booleans, numbers, arrays, nested tables) ---
+def vkey(version):
+    return tuple(int(p) for p in str(version).split("."))
+
+
+def coverage(rules, claude, codex):
+    """What each rule puts into this build, for the checker and the gate (they need no YAML parser).
+    Rule keys carry the value the rule asks for; site keys the value the build ended up with."""
+    out = {}
+    for rule in rules:
+        keys = {"claude": dict(rule.get("claude") or {}), "codex": dict(rule.get("codex") or {})}
+        for target in rule.get("site") or {}:
+            agent, key = target.split(".", 1)
+            value = get_dotted(claude if agent == "claude" else codex, key)
+            if value is not None:
+                keys[agent][key] = value
+        out[rule["id"]] = {"title": rule["title"], "checks": rule.get("checks") or [],
+                           "claude_keys": keys["claude"], "codex_keys": keys["codex"],
+                           "deployment": bool(rule.get("deployment")), "min_version": rule.get("min_version") or {},
+                           "platforms": rule.get("platforms", ["macos", "linux", "windows"]),
+                           "claude_coverage": agent_coverage(rule, "claude"),
+                           "codex_coverage": agent_coverage(rule, "codex")}
+    return out
+
+
+def agent_coverage(rule, agent):
+    """key / built in / deployment / none — how a rule reaches one agent."""
+    gap = (rule.get("gap") or {}).get(agent, "")
+    if rule.get(agent) or any(t.startswith(agent + ".") for t in rule.get("site") or {}):
+        return "key"
+    if gap.startswith(("Built in", "Project config is covered")):
+        return "built in"
+    if gap:
+        return "none"
+    return "deployment" if rule.get("deployment") else "none"
+
+
+# --- TOML: the subset requirements.toml needs (strings, booleans, numbers, arrays, inline and nested tables) ---
 def toml_value(v):
     if isinstance(v, bool):
         return "true" if v else "false"
@@ -77,6 +122,8 @@ def toml_value(v):
         return json.dumps(v, ensure_ascii=False)
     if isinstance(v, list):
         return "[" + ", ".join(toml_value(x) for x in v) + "]"
+    if isinstance(v, dict):
+        return "{" + ", ".join(f"{toml_key(k)} = {toml_value(x)}" for k, x in v.items()) + "}"
     raise TypeError(f"unsupported TOML value {v!r}")
 
 
@@ -204,6 +251,11 @@ def main():
     OUT = Path(args.out).resolve()
     rules = yaml.safe_load((ROOT / "baseline/rules.yaml").read_text())["rules"]
     site = yaml.safe_load(Path(args.site).read_text()) or {}
+    floor = max((r["min_version"]["claude"] for r in rules if "claude" in (r.get("min_version") or {})), key=vkey)
+    site_min = get_dotted(site, "versions.claude.min")
+    if site_min is not None and vkey(site_min) < vkey(floor):
+        raise SystemExit(f"{args.site}: versions.claude.min {site_min} is below {floor}, the oldest Claude Code "
+                         "that enforces every rule (min_version in rules.yaml)")
 
     claude, codex, manifest = compose(rules, site, "macos")
     claude_win, codex_win, manifest_win = compose(rules, site, "windows")
@@ -230,11 +282,16 @@ def main():
     for rid, agent, key in manifest:
         seen[(rid, agent, key)] = "all"
     rows += [f"| {r} | {a} | `{k}` | {p} |" for (r, a, k), p in seen.items()]
-    no_codex = [r["id"] for r in rules if not r.get("codex") and "codex" in (r.get("gap") or {})]
-    no_claude = [r["id"] for r in rules if not r.get("claude") and "claude" in (r.get("gap") or {})]
-    rows += ["", f"Rules with no Codex control (see `gap` in rules.yaml): {', '.join(no_codex) or 'none'}.",
-             f"Rules with no Claude Code control: {', '.join(no_claude) or 'none'}."]
+    cov = coverage(rules, claude, codex)
+    for agent, name in (("codex", "Codex"), ("claude", "Claude Code")):
+        by = {kind: [rid for rid, c in cov.items() if c[agent + "_coverage"] == kind]
+              for kind in ("built in", "deployment", "none")}
+        rows += ["", f"{name} rules without a key (see `gap` and `deployment` in rules.yaml): "
+                 f"built in: {', '.join(by['built in']) or 'none'}; "
+                 f"by deployment: {', '.join(by['deployment']) or 'none'}; "
+                 f"no control: {', '.join(by['none']) or 'none'}."]
     write(OUT / "MANIFEST.md", "\n".join(rows) + "\n")
+    write(OUT / "coverage.json", json.dumps({"rules": cov}, indent=1, sort_keys=True) + "\n")
     print(f"{len(rules)} rules -> {len(claude)} Claude top-level keys, {len(codex)} Codex top-level keys; build/ written")
 
 
